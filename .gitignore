@@ -5,3 +5,14 @@ artifacts/
 .vs/
 *.user
 *.log
+*.pdb
+*.wixpdb
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+*.pem
+*.key
+credentials*.json
+secrets*.json

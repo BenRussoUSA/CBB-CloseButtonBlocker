@@ -1,10 +1,41 @@
 # CBB-CloseButtonBlocker
 
-Windows 11 tray utility by **BenRussoUSA**. Current version: **0.8.0alpha**.
-Private alpha for user acceptance testing. Licensed under **GPL-3.0-only**.
+## Prevent accidental window closing
 
-CBB reduces accidental closing of selected windows by disabling their
-standard Windows Close command. It is not a security or parental-control tool.
+CBB is a small Windows 11 tray utility that lets you turn off the Close button
+on selected windows. You can also save window-title rules so matching windows
+are automatically protected when they open.
+
+Created by **BenRussoUSA** · **0.8.0alpha** · Windows 11 x64 · GPLv3
+
+### [Download Installer (.MSI)](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases/download/v0.8.0alpha/CBB-CloseButtonBlocker-0.8.0alpha-win-x64.msi)
+
+About **38 MiB**. Includes the .NET runtime and complete CBB source. Copy it to a
+USB drive to install offline; no additional dependency downloads are required.
+The installed application files occupy about **118 MiB**, plus Windows' installer cache.
+
+| Link | What you will find |
+| --- | --- |
+| [Download Installer](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases/download/v0.8.0alpha/CBB-CloseButtonBlocker-0.8.0alpha-win-x64.msi) | Recommended Windows x64 MSI |
+| [README](#use) | Setup and usage instructions below |
+| [LICENSE](LICENSE.txt) | GNU General Public License version 3 |
+| [CONTRIBUTING](CONTRIBUTING.md) | How to suggest changes or submit patches |
+| [Release notes and other downloads](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases/tag/v0.8.0alpha) | ZIP distribution and checksums |
+| [Report a problem](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/issues) | Bug reports and feedback |
+| [Discuss the project](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/discussions) | General comments and questions |
+
+**Private alpha:** currently available only to the owner and invited testers.
+This repository has not been made public. Downloads require GitHub sign-in and
+repository access. The alpha is unsigned and may trigger a Windows publisher warning.
+
+### Get started
+
+1. Download and run the MSI, then launch **CBB-CloseButtonBlocker** from Start.
+2. Click the tray icon and right-click the window you want to protect.
+3. Choose **Close Button OFF**. Choose **Close Button ON** to restore normal closing.
+
+CBB works through the standard Windows Close command. Applications with custom
+title bars may behave differently. It is not a security or parental-control tool.
 
 ## Use
 
