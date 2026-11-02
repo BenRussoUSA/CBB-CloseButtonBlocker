@@ -1,0 +1,46 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="CBB-CloseButtonBlocker" Manufacturer="BenRussoUSA"
+           Version="$(var.ProductVersion)" ProductCode="$(var.ProductCode)"
+           UpgradeCode="{2D2EC3F8-438D-4C98-81E8-37AB00CBECA5}"
+           Scope="perUser" InstallerVersion="500" Compressed="yes">
+    <SummaryInformation Description="CBB-CloseButtonBlocker private alpha" />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of CBB-CloseButtonBlocker is already installed." Schedule="afterInstallInitialize" />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/BenRussoUSA/CBB-CloseButtonBlocker" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/BenRussoUSA/CBB-CloseButtonBlocker#readme" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+    <Property Id="ARPPRODUCTICON" Value="CbbIcon" />
+    <Property Id="CBBEXE">
+      <DirectorySearch Id="FindInstalledDirectory" Path="[LocalAppDataFolder]Programs\CBB-CloseButtonBlocker">
+        <FileSearch Id="FindInstalledExecutable" Name="CBB-CloseButtonBlocker.exe" />
+      </DirectorySearch>
+    </Property>
+    <Icon Id="CbbIcon" SourceFile="$(var.PayloadDir)\app.ico" />
+    <Launch Condition="VersionNT64 AND NOT ARM64" Message="This alpha requires x64 Windows." />
+    <SetProperty Id="ARPINSTALLLOCATION" Value="[INSTALLFOLDER]" After="CostFinalize" />
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="ProgramsFolder" Name="Programs">
+        <Directory Id="INSTALLFOLDER" Name="CBB-CloseButtonBlocker" />
+      </Directory>
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="CbbStartFolder" Name="CBB-CloseButtonBlocker">
+        <Component Id="StartShortcut" Guid="*">
+          <Shortcut Id="CbbStart" Name="CBB-CloseButtonBlocker" Target="[INSTALLFOLDER]CBB-CloseButtonBlocker.exe" WorkingDirectory="INSTALLFOLDER" Icon="CbbIcon" />
+          <RemoveFolder Id="RemoveStartFolder" On="uninstall" />
+          <RegistryValue Root="HKCU" Key="Software\BenRussoUSA\CBB-CloseButtonBlocker" Name="Installed" Value="1" Type="integer" KeyPath="yes" />
+        </Component>
+      </Directory>
+    </StandardDirectory>
+    <CustomAction Id="StopCbb" Directory="INSTALLFOLDER" ExeCommand="&quot;[INSTALLFOLDER]CBB-CloseButtonBlocker.exe&quot; --stop" Execute="immediate" Return="check" />
+    <CustomAction Id="PrepareUninstall" Directory="INSTALLFOLDER" ExeCommand="&quot;[INSTALLFOLDER]CBB-CloseButtonBlocker.exe&quot; --prepare-uninstall" Execute="immediate" Return="ignore" />
+    <InstallExecuteSequence>
+      <Custom Action="StopCbb" Before="InstallValidate" Condition="CBBEXE AND (Installed OR WIX_UPGRADE_DETECTED)" />
+      <Custom Action="PrepareUninstall" Before="RemoveFiles" Condition="CBBEXE AND REMOVE~=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
+    </InstallExecuteSequence>
+    <Feature Id="MainFeature" Title="CBB-CloseButtonBlocker" Level="1">
+      <ComponentGroupRef Id="Payload" />
+      <ComponentRef Id="StartShortcut" />
+    </Feature>
+  </Package>
+</Wix>
