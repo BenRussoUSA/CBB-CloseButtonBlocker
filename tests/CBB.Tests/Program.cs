@@ -145,6 +145,24 @@ internal static class Program
         }
         Save(new SettingsForm(new() { Rules = [new(".* - Notepad$", true), new("Important Application")] }), "settings");
         Save(new RuleEditor(new(".* - Notepad$", true)), "rule-editor");
+        using var onWindow = new Form { Text = "Example document - Close Button ON" };
+        using var offWindow = new Form { Text = "Protected document - Close Button OFF" };
+        _ = onWindow.Handle; _ = offWindow.Handle;
+        NativeWindows.SetCloseState(offWindow.Handle, 3);
+        using var previewController = new WindowController();
+        previewController.Windows.AddRange([
+            new(onWindow.Handle, (uint)Environment.ProcessId, onWindow.Text),
+            new(offWindow.Handle, (uint)Environment.ProcessId, offWindow.Text),
+            new(0, 0, "Unsupported window - no standard Close command")
+        ]);
+        Save(new WindowMenu(previewController, () => { }, () => { }), "window-list");
+        using (var trayMenu = new TrayMenu(() => { }, () => Task.CompletedTask, () => { }))
+        {
+            trayMenu.Show(new Point(100, 100)); Application.DoEvents();
+            using var bitmap = new Bitmap(trayMenu.Width, trayMenu.Height);
+            trayMenu.DrawToBitmap(bitmap, new Rectangle(Point.Empty, bitmap.Size));
+            bitmap.Save(Path.Combine(output, "tray-menu.png"), ImageFormat.Png); trayMenu.Close();
+        }
         using var icon = TrayContext.CreateIcon(); using var iconBitmap = icon.ToBitmap(); iconBitmap.Save(Path.Combine(output, "tray-icon.png"));
         using var file = File.Create(Path.Combine(output, "app.ico")); icon.Save(file);
         Check(true, "settings UI and tray icon rendered for inspection");

@@ -1,11 +1,14 @@
-# 0.8.0alpha UAT checklist
+# 0.8.1alpha UAT checklist
 
 Use a disposable document or test window first. Save work before testing closing.
 
 1. Install the MSI as your normal user. Verify one CBB entry in Installed apps
    and a Start-menu shortcut. Launch it. No separate .NET installation is needed.
 2. Find the black tray icon with a light-gray X and red prohibition sign.
-   Click it and confirm open window titles appear.
+   Left-click it and confirm the indented window list appears under
+   "List of windows   (right click one to change close button state)".
+   Green filled circles mean ON; CBB logos mean OFF. Unsupported windows
+   use a gray outline circle. Check the author link at the bottom right.
 3. Right-click a test window. Close Button ON should be bold with a diamond.
    Choose OFF; attempt the window's upper-right X. Record whether it is blocked.
    Choose ON and confirm normal behavior returns.
@@ -18,9 +21,11 @@ Use a disposable document or test window first. Save work before testing closing
 7. With a matching window, select ON manually. Wait several scans and change the
    title by editing a disposable document. It must remain ON. Close and reopen the
    application; the new matching window must be OFF.
-8. Exit CBB. Its blocked windows must return to their original Close state. Restart
+8. Right-click the tray icon. Verify About, Check for updates, and Exit CBB appear
+   without opening a new window list. Exit CBB. Its blocked windows must return to their original Close state. Restart
    CBB and confirm saved rules apply again to existing windows.
-9. Enable Launch at startup; verify the Settings checkbox and tray checkbox agree.
+9. Enable Launch at startup at the top of Settings. Confirm it is no longer shown
+   on the window-list popup.
    Sign out/in or reboot when convenient. CBB should run and apply saved rules.
    Disable startup and verify it stays disabled after another sign-in.
 10. Check for updates. The private alpha should explain that browser sign-in is

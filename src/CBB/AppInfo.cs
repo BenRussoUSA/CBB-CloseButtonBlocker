@@ -6,7 +6,7 @@ namespace CBB;
 public static class AppInfo
 {
     public const string Name = "CBB-CloseButtonBlocker";
-    public const string Version = "0.8.0alpha";
+    public const string Version = "0.8.1alpha";
     public const string Repository = "https://github.com/BenRussoUSA/CBB-CloseButtonBlocker";
     public const string MutexName = "Local\\BenRussoUSA.CBB.CloseButtonBlocker";
     public const string StopEventName = "Local\\BenRussoUSA.CBB.CloseButtonBlocker.Stop";

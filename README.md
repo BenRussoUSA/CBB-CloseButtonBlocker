@@ -6,9 +6,9 @@ CBB is a small Windows 11 tray utility that lets you turn off the Close button
 on selected windows. You can also save window-title rules so matching windows
 are automatically protected when they open.
 
-Created by **BenRussoUSA** · **0.8.0alpha** · Windows 11 x64 · GPLv3
+Created by **BenRussoUSA** · **0.8.1alpha** · Windows 11 x64 · GPLv3
 
-### [Download Installer (.MSI)](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases/download/v0.8.0alpha/CBB-CloseButtonBlocker-0.8.0alpha-win-x64.msi)
+### [Download Installer (.MSI)](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases/download/v0.8.1alpha/CBB-CloseButtonBlocker-0.8.1alpha-win-x64.msi)
 
 About **38 MiB**. Includes the .NET runtime and complete CBB source. Copy it to a
 USB drive to install offline; no additional dependency downloads are required.
@@ -16,11 +16,11 @@ The installed application files occupy about **118 MiB**, plus Windows' installe
 
 | Link | What you will find |
 | --- | --- |
-| [Download Installer](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases/download/v0.8.0alpha/CBB-CloseButtonBlocker-0.8.0alpha-win-x64.msi) | Recommended Windows x64 MSI |
+| [Download Installer](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases/download/v0.8.1alpha/CBB-CloseButtonBlocker-0.8.1alpha-win-x64.msi) | Recommended Windows x64 MSI |
 | [README](#use) | Setup and usage instructions below |
 | [LICENSE](LICENSE.txt) | GNU General Public License version 3 |
 | [CONTRIBUTING](CONTRIBUTING.md) | How to suggest changes or submit patches |
-| [Release notes and other downloads](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases/tag/v0.8.0alpha) | ZIP distribution and checksums |
+| [Release notes and other downloads](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases/tag/v0.8.1alpha) | ZIP distribution and checksums |
 | [Report a problem](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/issues) | Bug reports and feedback |
 | [Discuss the project](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/discussions) | General comments and questions |
 
@@ -40,9 +40,13 @@ title bars may behave differently. It is not a security or parental-control tool
 ## Use
 
 Install the x64 MSI and launch **CBB-CloseButtonBlocker** from the Start menu.
-Click the tray icon (possibly under hidden icons), then right-click a window
+Left-click the tray icon (possibly under hidden icons), then right-click a window
 title. **Close Button ON** means normal behavior; **Close Button OFF** blocks
 the Windows Close command. The active option is bold with a diamond.
+
+The indented window list shows a green filled circle for Close Button ON and
+the CBB logo for OFF. A gray outline circle means no standard Close command
+was found. The author link at the bottom right opens the GitHub profile.
 
 In **Settings**, add exact titles or regex rules. You can edit or remove rules.
 **Help** includes examples, and the rule editor can test a sample title.
@@ -54,7 +58,9 @@ A manual selection remains in effect until that window closes or CBB exits,
 even if the title changes. Newly opened matching windows are blocked again.
 Removing a rule does not unblock an existing window; use Close Button ON.
 
-Startup is opt-in. **Exit CBB** restores the Close states CBB changed.
+Startup is opt-in and is controlled at the top of Settings. Right-click the
+tray icon for **About CBB-CloseButtonBlocker**, **Check for updates**, or
+**Exit CBB**. Exit restores the Close states CBB changed.
 
 ## Installation and updates
 

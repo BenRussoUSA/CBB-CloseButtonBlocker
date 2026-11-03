@@ -10,6 +10,7 @@ public sealed class TrayContext : ApplicationContext
     private readonly WindowController controller = new();
     private readonly NotifyIcon tray;
     private readonly Icon icon;
+    private readonly TrayMenu trayMenu;
     private readonly System.Windows.Forms.Timer timer = new() { Interval = 700 };
     private readonly EventWaitHandle stop = new(false, EventResetMode.AutoReset, AppInfo.StopEventName);
     private readonly Control lifetime = new();
@@ -25,8 +26,9 @@ public sealed class TrayContext : ApplicationContext
         // Respect Windows Startup Apps settings; do not overwrite the registry merely by launching.
         settings.LaunchAtStartup = AppInfo.StartupEnabled();
         icon = CreateIcon();
-        tray = new NotifyIcon { Icon = icon, Text = "CBB-CloseButtonBlocker 0.8.0alpha", Visible = true };
-        tray.MouseClick += (_, e) => { if (e.Button is MouseButtons.Left or MouseButtons.Right) OpenMenu(); };
+        trayMenu = new TrayMenu(() => AppInfo.OpenUrl(AppInfo.Repository + "#readme"), () => CheckUpdates(true), () => ExitThread());
+        tray = new NotifyIcon { Icon = icon, Text = $"{AppInfo.Name} {AppInfo.Version}", ContextMenuStrip = trayMenu, Visible = true };
+        tray.MouseClick += (_, e) => { if (e.Button == MouseButtons.Left) OpenMenu(); };
         tray.BalloonTipClicked += (_, _) => { if (updateUrl != null) AppInfo.OpenUrl(updateUrl); };
         timer.Tick += async (_, _) =>
         {
@@ -66,7 +68,7 @@ public sealed class TrayContext : ApplicationContext
     {
         if (menu is { IsDisposed: false }) { menu.Activate(); return; }
         controller.Scan(settings.Rules);
-        menu = new WindowMenu(controller, () => OpenSettings(), () => ToggleStartup(), () => CheckUpdates(true), () => Uninstall(), () => ExitThread());
+        menu = new WindowMenu(controller, () => OpenSettings(), () => Uninstall());
         menu.FormClosed += (_, _) => menu = null;
         menu.Show();
     }
@@ -95,8 +97,6 @@ public sealed class TrayContext : ApplicationContext
         }
         menu?.RefreshWindows();
     }
-
-    private void ToggleStartup() => SaveSettings(new() { LaunchAtStartup = !AppInfo.StartupEnabled(), Rules = settings.Rules.ToList() });
 
     private async Task CheckUpdates(bool interactive)
     {
@@ -132,7 +132,7 @@ public sealed class TrayContext : ApplicationContext
         var cancel = new Button { Text = "Cancel", Width = 100, DialogResult = DialogResult.Cancel };
         feedback.Click += (_, _) =>
         {
-            AppInfo.OpenUrl(AppInfo.Repository + "/issues/new?title=" + Uri.EscapeDataString("Uninstall feedback (0.8.0alpha)") + "&body=" + Uri.EscapeDataString("Why I am uninstalling CBB:\n\n"));
+            AppInfo.OpenUrl(AppInfo.Repository + "/issues/new?title=" + Uri.EscapeDataString($"Uninstall feedback ({AppInfo.Version})") + "&body=" + Uri.EscapeDataString("Why I am uninstalling CBB:\n\n"));
             uninstall.Text = "Uninstall now";
         };
         uninstall.Click += (_, _) => dialog.DialogResult = DialogResult.OK;
@@ -158,7 +158,7 @@ public sealed class TrayContext : ApplicationContext
         if (disposing)
         {
             Microsoft.Win32.SystemEvents.SessionEnding -= OnSessionEnding;
-            timer.Dispose(); controller.Dispose(); tray.Dispose(); icon.Dispose(); stop.Dispose(); lifetime.Dispose();
+            timer.Dispose(); controller.Dispose(); tray.Dispose(); trayMenu.Dispose(); icon.Dispose(); stop.Dispose(); lifetime.Dispose();
         }
         base.Dispose(disposing);
     }

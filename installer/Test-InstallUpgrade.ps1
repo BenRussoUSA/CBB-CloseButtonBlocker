@@ -4,13 +4,13 @@ param([switch]$ResumeAfterUpgrade)
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path $PSScriptRoot
 Set-Location $repoRoot
-$releaseMsi = (Resolve-Path 'artifacts/release/CBB-CloseButtonBlocker-0.8.0alpha-win-x64.msi').Path
+$releaseMsi = (Resolve-Path 'artifacts/release/CBB-CloseButtonBlocker-0.8.1alpha-win-x64.msi').Path
 $installDir = Join-Path $env:LOCALAPPDATA 'Programs/CBB-CloseButtonBlocker'
 $settingsDir = Join-Path $env:LOCALAPPDATA 'CBB-CloseButtonBlocker'
 $settingsFile = Join-Path $settingsDir 'settings.json'
 $runKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
 $name = 'CBB-CloseButtonBlocker'
-$productCode = '{9A3F9047-E185-460D-BFD4-078C800A5401}'
+$productCode = '{70D155E3-71B5-4352-938D-DA8AC533E065}'
 $oldCode = '{428160C4-D002-4AE3-90A5-33A173FFBE6C}'
 if (-not $ResumeAfterUpgrade) {
     if ((Test-Path $installDir) -or (Test-Path $settingsDir)) { throw 'A CBB installation or settings directory already exists. Test aborted without modifying it.' }
@@ -52,7 +52,7 @@ if (-not (Get-ItemProperty -Path $runKey -Name $name -ErrorAction SilentlyContin
 if (-not $running.WaitForExit(5000)) { throw 'Upgrade did not stop the running application.' }
 }
 $entries = @(foreach ($registryRoot in @('HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall','HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall')) { Get-ChildItem $registryRoot -ErrorAction SilentlyContinue | Get-ItemProperty | Where-Object DisplayName -eq $name })
-if ($entries.Count -ne 1 -or $entries[0].DisplayVersion -ne '0.8.0') { throw 'Upgrade registration is incorrect.' }
+if ($entries.Count -ne 1 -or $entries[0].DisplayVersion -ne '0.8.1') { throw 'Upgrade registration is incorrect.' }
 Run-Msi '/i' $oldMsi '03-reject-downgrade' -ExpectFailure
 $downgradeLog = Get-Content (Join-Path $testDir '03-reject-downgrade.log') -Raw
 if ($downgradeLog -notmatch 'A newer version of CBB-CloseButtonBlocker is already installed') { throw 'Downgrade failed for an unexpected reason.' }
@@ -72,4 +72,4 @@ foreach ($file in @($settingsFile, ($settingsFile + '.bak'))) {
 if (@(Get-ChildItem -LiteralPath $settingsDir -Force).Count -eq 0) { Remove-Item -LiteralPath $settingsDir }
 Run-Msi '/i' $releaseMsi '05-install-final-alpha'
 Write-Output 'PASS: install, running-app shutdown, settings/startup preservation, downgrade rejection, uninstall, and final clean install.'
-Write-Output 'CBB 0.8.0alpha is installed for the current user; launch from Start for UAT.'
+Write-Output 'CBB 0.8.1alpha is installed for the current user; launch from Start for UAT.'
