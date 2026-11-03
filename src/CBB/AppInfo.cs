@@ -6,7 +6,7 @@ namespace CBB;
 public static class AppInfo
 {
     public const string Name = "CBB-CloseButtonBlocker";
-    public const string Version = "0.8.1alpha";
+    public const string Version = "0.8.3";
     public const string Repository = "https://github.com/BenRussoUSA/CBB-CloseButtonBlocker";
     public const string MutexName = "Local\\BenRussoUSA.CBB.CloseButtonBlocker";
     public const string StopEventName = "Local\\BenRussoUSA.CBB.CloseButtonBlocker.Stop";
@@ -32,20 +32,4 @@ public static class AppInfo
         else key.DeleteValue(Name, false);
     }
 
-    public static string? InstalledProduct()
-    {
-        foreach (var hive in new[] { Registry.CurrentUser, Registry.LocalMachine })
-        {
-            using var root = hive.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall");
-            if (root == null) continue;
-            foreach (var name in root.GetSubKeyNames())
-            {
-                using var key = root.OpenSubKey(name);
-                if (key?.GetValue("DisplayName") as string == Name && Guid.TryParse(name, out _) &&
-                    string.Equals((key.GetValue("InstallLocation") as string)?.TrimEnd('\\'), AppContext.BaseDirectory.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase))
-                    return name;
-            }
-        }
-        return null;
-    }
 }

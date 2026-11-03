@@ -1,4 +1,4 @@
-CBB-CloseButtonBlocker 0.8.1alpha
+CBB-CloseButtonBlocker 0.8.3
 Author: BenRussoUSA
 License: GNU General Public License version 3 (GPL-3.0-only)
 
@@ -11,16 +11,17 @@ https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases
 
 Private repository links require GitHub sign-in and repository access.
 
-CBB runs in the Windows notification area. Click its icon to list open
-windows. Right-click a title and choose Close Button OFF to disable the
-standard Windows Close command. Close Button ON restores it. The active
-option is bold and marked with a diamond. The list shows a green filled
-circle for ON and the CBB logo for OFF. A gray outline means unsupported.
-Right-click the tray icon for About, Check for updates, or Exit CBB.
+CBB runs in the Windows notification area. Click its icon to open a table
+with Hide Close Button on the left and Window Title on the right. Turn a
+toggle On to disable the standard Windows Close command, or Off to restore
+normal closing. Space operates a focused toggle. N/A means unsupported.
+The button may remain visible: CBB disables closing rather than hiding it.
+Right-click the tray icon to open Settings. That menu also contains About
+and Check for updates. Exit CBB restores the Close states CBB changed.
 
 Settings lets you create exact-title or regular-expression rules. Matching
 windows are blocked on first detection, including when CBB starts. A manual
-Close Button ON choice lasts for that window until it closes or CBB exits.
+toggle Off choice lasts for that window until it closes or CBB exits.
 New matching windows are blocked again. The Help button explains regex.
 Startup control is at the top of Settings; it defaults to off.
 
@@ -47,9 +48,9 @@ updates use a clickable Windows notification. This private alpha does not
 store GitHub credentials; check private releases in the browser manually.
 No automatic downloads or installations occur.
 
-Uninstall from Windows Installed apps or the CBB menu. Feedback is optional
-and opens GitHub in the browser. Settings are retained for reinstalling.
-Use the Installed apps entry if the tray application is not running.
+Uninstall through Windows Settings > Apps > Installed apps. Select
+CBB-CloseButtonBlocker and choose Uninstall. There is no in-app uninstall
+command or feedback dialog. Settings are retained for reinstalling.
 
 Complete application source and installer/build definitions are in src\.
 See src\docs\BUILD.md for building and src\docs\UAT.md for testing.

@@ -6,6 +6,8 @@ internal static class Program
 {
     [System.Runtime.InteropServices.DllImport("user32.dll")]
     private static extern bool ShowWindow(nint hwnd, int command);
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern nint SendMessage(nint hwnd, uint message, nint wparam, nint lparam);
     private static int checks;
     private static void Check(bool pass, string message)
     {
@@ -103,6 +105,39 @@ internal static class Program
             controller.Scan(rules);
             Check((NativeWindows.CloseState(handle) & 3) != 0, "fresh session reapplies saved rule");
             controller.RestoreAll();
+            controller.Scan([]);
+            using (var menu = new WindowMenu(controller))
+            {
+                menu.Show(); Pump();
+                var grid = menu.Controls.OfType<TableLayoutPanel>().Single().Controls.OfType<DataGridView>().Single();
+                var row = grid.Rows.Cast<DataGridViewRow>().Single(r => ((WindowEntry)r.Tag!).Handle == handle);
+                grid.CurrentCell = row.Cells[0]; grid.Focus();
+                row.Cells[0].AccessibilityObject.DoDefaultAction(); Pump();
+                Check((NativeWindows.CloseState(handle) & 3) != 0 && row.Cells[0].Value is true,
+                    "grid toggle blocks native Close and shows On");
+                SendMessage(grid.Handle, 0x100, (nint)Keys.Space, 0);
+                SendMessage(grid.Handle, 0x101, (nint)Keys.Space, 0); Pump();
+                Check((NativeWindows.CloseState(handle) & 3) == 0 && row.Cells[0].Value is false,
+                    "Space on grid toggle restores native Close and shows Off");
+                var bounds = grid.GetCellDisplayRectangle(0, row.Index, false);
+                nint point = (nint)((bounds.Left + bounds.Width / 2) | ((bounds.Top + bounds.Height / 2) << 16));
+                void ClickToggle()
+                {
+                    SendMessage(grid.Handle, 0x201, 1, point);
+                    SendMessage(grid.Handle, 0x202, 0, point); Pump();
+                }
+                ClickToggle();
+                Check((NativeWindows.CloseState(handle) & 3) != 0 && row.Cells[0].Value is true,
+                    "single mouse click on toggle blocks native Close");
+                ClickToggle();
+                Check((NativeWindows.CloseState(handle) & 3) == 0 && row.Cells[0].Value is false,
+                    "single mouse click on toggle restores native Close");
+                controller.Scan(rules); menu.RefreshWindows();
+                Check((NativeWindows.CloseState(handle) & 3) == 0,
+                    "grid manual override survives automatic rule scan");
+                menu.Close();
+            }
+            controller.RestoreAll();
         }
         finally
         {
@@ -155,8 +190,14 @@ internal static class Program
             new(offWindow.Handle, (uint)Environment.ProcessId, offWindow.Text),
             new(0, 0, "Unsupported window - no standard Close command")
         ]);
-        Save(new WindowMenu(previewController, () => { }, () => { }), "window-list");
-        using (var trayMenu = new TrayMenu(() => { }, () => Task.CompletedTask, () => { }))
+        using (var preview = new WindowMenu(previewController))
+        {
+            var grid = preview.Controls.OfType<TableLayoutPanel>().Single().Controls.OfType<DataGridView>().Single();
+            Check(grid.Rows.Cast<DataGridViewRow>().Single(r => ((WindowEntry)r.Tag!).Handle == 0).Cells[0].ReadOnly,
+                "unsupported window toggle is read-only");
+            Save(preview, "window-list");
+        }
+        using (var trayMenu = new TrayMenu(() => { }, () => { }, () => Task.CompletedTask, () => { }))
         {
             trayMenu.Show(new Point(100, 100)); Application.DoEvents();
             using var bitmap = new Bitmap(trayMenu.Width, trayMenu.Height);
