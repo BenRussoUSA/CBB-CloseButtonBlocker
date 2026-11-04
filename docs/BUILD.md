@@ -1,9 +1,10 @@
-# Build the private Windows alpha
+# Build CBB for Windows
 
 Requirements: Windows 11 x64, .NET SDK 10.0.403 (or a later patch in that feature
 band), and WiX CLI 4.0.6. Build tools are not required by end users.
-WiX 4.0.6 is pinned for this alpha's installer toolchain; reassess the supported
-toolchain and its licensing before the public release.
+WiX 4.0.6 is pinned to reproduce this beta's installer. Its source is licensed
+under the [Microsoft Reciprocal License](https://github.com/wixtoolset/wix/blob/v4.0.6/LICENSE.TXT).
+WiX is a build tool; end users run the Windows Installer supplied by Windows.
 
 From the repository root in PowerShell:
 

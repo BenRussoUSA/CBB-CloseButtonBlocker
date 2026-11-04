@@ -68,6 +68,8 @@ internal static class Program
         Check(!Updates.IsNewer("0.8.0alpha", "0.8.0alpha"), "same release is not an update");
         Check(!Updates.IsNewer("0.7.9", "0.8.0alpha"), "older stable does not replace newer alpha");
         Check(!Updates.IsNewer("bad", "0.8.0alpha"), "invalid release tag ignored");
+        Check(Updates.IsNewer("v0.9.0beta", "0.8.3"), "public beta is newer than the private test release");
+        Check(!Updates.IsNewer("v0.9.0beta", "0.9.0beta"), "current public beta does not update to itself");
     }
 
     private static void Pump() { for (int i = 0; i < 12; i++) { Application.DoEvents(); Thread.Sleep(20); } }

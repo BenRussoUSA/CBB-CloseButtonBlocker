@@ -5,8 +5,7 @@ Windows version, affected application/version, steps, expected result, and actua
 result. Remove private information from titles and screenshots before submitting.
 
 For code changes, fork the repository, create a branch, and open a pull request.
-Private alpha contributors need repository access and must follow its forking policy.
-If forking is unavailable, attach a patch to an issue or request a contributor branch.
+GitHub sign-in is required to post an issue or submit a pull request.
 
 Contributions must be offered under GPL-3.0-only. Retain existing copyright notices.
 Only submit code you have the right to contribute. Explain behavior changes and

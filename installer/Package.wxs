@@ -3,7 +3,7 @@
            Version="$(var.ProductVersion)" ProductCode="$(var.ProductCode)"
            UpgradeCode="{2D2EC3F8-438D-4C98-81E8-37AB00CBECA5}"
            Scope="perUser" InstallerVersion="500" Compressed="yes">
-    <SummaryInformation Description="CBB-CloseButtonBlocker private alpha" />
+    <SummaryInformation Description="CBB-CloseButtonBlocker public beta" />
     <MajorUpgrade DowngradeErrorMessage="A newer version of CBB-CloseButtonBlocker is already installed." Schedule="afterInstallInitialize" />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
     <Property Id="ARPHELPLINK" Value="https://github.com/BenRussoUSA/CBB-CloseButtonBlocker" />
@@ -16,7 +16,7 @@
       </DirectorySearch>
     </Property>
     <Icon Id="CbbIcon" SourceFile="$(var.PayloadDir)\app.ico" />
-    <Launch Condition="VersionNT64 AND NOT ARM64" Message="This alpha requires x64 Windows." />
+    <Launch Condition="VersionNT64 AND NOT ARM64" Message="CBB requires x64 Windows." />
     <SetProperty Id="ARPINSTALLLOCATION" Value="[INSTALLFOLDER]" After="CostFinalize" />
     <StandardDirectory Id="LocalAppDataFolder">
       <Directory Id="ProgramsFolder" Name="Programs">

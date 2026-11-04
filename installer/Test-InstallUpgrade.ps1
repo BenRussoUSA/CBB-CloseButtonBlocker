@@ -1,16 +1,16 @@
 # Run only with permission to install CBB for the current user.
-# This script requires a clean CBB profile and leaves the final alpha installed.
+# This script requires a clean CBB profile and leaves the final beta installed.
 param([switch]$ResumeAfterUpgrade)
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path $PSScriptRoot
 Set-Location $repoRoot
-$releaseMsi = (Resolve-Path 'artifacts/release/CBB-CloseButtonBlocker-0.8.3-win-x64.msi').Path
+$releaseMsi = (Resolve-Path 'artifacts/release/CBB-CloseButtonBlocker-0.9.0beta-win-x64.msi').Path
 $installDir = Join-Path $env:LOCALAPPDATA 'Programs/CBB-CloseButtonBlocker'
 $settingsDir = Join-Path $env:LOCALAPPDATA 'CBB-CloseButtonBlocker'
 $settingsFile = Join-Path $settingsDir 'settings.json'
 $runKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
 $name = 'CBB-CloseButtonBlocker'
-$productCode = '{E5E14797-42C0-4205-A5D7-401CA5C7AA49}'
+$productCode = '{4AE39929-EF67-4BB3-97BF-F8CCE230E3A1}'
 $oldCode = '{428160C4-D002-4AE3-90A5-33A173FFBE6C}'
 if (-not $ResumeAfterUpgrade) {
     if ((Test-Path $installDir) -or (Test-Path $settingsDir)) { throw 'A CBB installation or settings directory already exists. Test aborted without modifying it.' }
@@ -46,13 +46,13 @@ $before = (Get-FileHash $settingsFile).Hash
 $running = Start-Process -FilePath (Join-Path $installDir "$name.exe") -PassThru -WindowStyle Hidden
 Start-Sleep -Seconds 2
 if ($running.HasExited) { throw 'Installed self-contained application exited unexpectedly.' }
-Run-Msi '/i' $releaseMsi '02-upgrade-alpha'
+Run-Msi '/i' $releaseMsi '02-upgrade-beta'
 if ((Get-FileHash $settingsFile).Hash -ne $before) { throw 'Upgrade changed saved settings.' }
 if (-not (Get-ItemProperty -Path $runKey -Name $name -ErrorAction SilentlyContinue)) { throw 'Upgrade lost startup setting.' }
 if (-not $running.WaitForExit(5000)) { throw 'Upgrade did not stop the running application.' }
 }
 $entries = @(foreach ($registryRoot in @('HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall','HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall')) { Get-ChildItem $registryRoot -ErrorAction SilentlyContinue | Get-ItemProperty | Where-Object DisplayName -eq $name })
-if ($entries.Count -ne 1 -or $entries[0].DisplayVersion -ne '0.8.3') { throw 'Upgrade registration is incorrect.' }
+if ($entries.Count -ne 1 -or $entries[0].DisplayVersion -ne '0.9.0') { throw 'Upgrade registration is incorrect.' }
 Run-Msi '/i' $oldMsi '03-reject-downgrade' -ExpectFailure
 $downgradeLog = Get-Content (Join-Path $testDir '03-reject-downgrade.log') -Raw
 if ($downgradeLog -notmatch 'A newer version of CBB-CloseButtonBlocker is already installed') { throw 'Downgrade failed for an unexpected reason.' }
@@ -70,6 +70,6 @@ foreach ($file in @($settingsFile, ($settingsFile + '.bak'))) {
     }
 }
 if (@(Get-ChildItem -LiteralPath $settingsDir -Force).Count -eq 0) { Remove-Item -LiteralPath $settingsDir }
-Run-Msi '/i' $releaseMsi '05-install-final-alpha'
+Run-Msi '/i' $releaseMsi '05-install-final-beta'
 Write-Output 'PASS: install, running-app shutdown, settings/startup preservation, downgrade rejection, uninstall, and final clean install.'
-Write-Output 'CBB 0.8.3 is installed for the current user; launch from Start for UAT.'
+Write-Output 'CBB 0.9.0 is installed for the current user; launch from Start for UAT.'

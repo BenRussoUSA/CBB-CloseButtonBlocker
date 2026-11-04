@@ -24,10 +24,10 @@ public static class Updates
     public static async Task<(string Message, string? Url)> CheckAsync()
     {
         using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
-        http.DefaultRequestHeaders.UserAgent.ParseAdd("CBB-CloseButtonBlocker/0.8.3");
+        http.DefaultRequestHeaders.UserAgent.ParseAdd($"CBB-CloseButtonBlocker/{AppInfo.Version}");
         using var response = await http.GetAsync("https://api.github.com/repos/BenRussoUSA/CBB-CloseButtonBlocker/releases?per_page=30");
         if (response.StatusCode == HttpStatusCode.NotFound)
-            return ("This is a private alpha. Sign into GitHub with repository access to check for updates manually.", null);
+            return ("GitHub releases are currently unavailable. Try again later or open the release page in your browser.", null);
         response.EnsureSuccessStatusCode();
         using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         var newer = doc.RootElement.EnumerateArray()

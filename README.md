@@ -6,9 +6,9 @@ CBB is a small Windows 11 tray utility that lets you turn off the Close button
 on selected windows. You can also save window-title rules so matching windows
 are automatically protected when they open.
 
-Created by **BenRussoUSA** · **0.8.3** · Windows 11 x64 · GPLv3
+Created by **BenRussoUSA** · **0.9.0beta** · Windows 11 x64 · GPLv3
 
-### [Download Installer (.MSI)](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases/download/v0.8.3/CBB-CloseButtonBlocker-0.8.3-win-x64.msi)
+### [Download Installer (.MSI)](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases/download/v0.9.0beta/CBB-CloseButtonBlocker-0.9.0beta-win-x64.msi)
 
 About **38 MiB**. Includes the .NET runtime and complete CBB source. Copy it to a
 USB drive to install offline; no additional dependency downloads are required.
@@ -16,17 +16,17 @@ The installed application files occupy about **118 MiB**, plus Windows' installe
 
 | Link | What you will find |
 | --- | --- |
-| [Download Installer](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases/download/v0.8.3/CBB-CloseButtonBlocker-0.8.3-win-x64.msi) | Recommended Windows x64 MSI |
+| [Download Installer](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases/download/v0.9.0beta/CBB-CloseButtonBlocker-0.9.0beta-win-x64.msi) | Recommended Windows x64 MSI |
 | [README](#use) | Setup and usage instructions below |
 | [LICENSE](LICENSE.txt) | GNU General Public License version 3 |
 | [CONTRIBUTING](CONTRIBUTING.md) | How to suggest changes or submit patches |
-| [Release notes and other downloads](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases/tag/v0.8.3) | ZIP distribution and checksums |
+| [Release notes and other downloads](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases/tag/v0.9.0beta) | ZIP distribution and checksums |
 | [Report a problem](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/issues) | Bug reports and feedback |
 | [Discuss the project](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/discussions) | General comments and questions |
 
-**Private alpha:** currently available only to the owner and invited testers.
-This repository has not been made public. Downloads require GitHub sign-in and
-repository access. The alpha is unsigned and may trigger a Windows publisher warning.
+**Public beta:** downloads are available without GitHub sign-in.
+The installer is unsigned and may trigger a Windows publisher warning.
+Test with the applications you use before relying on Close-button blocking.
 
 ### Get started
 
@@ -67,8 +67,8 @@ right-click menu also provides **About CBB-CloseButtonBlocker** and
 ## Installation and updates
 
 Download the MSI from [Releases](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases).
-Private alpha downloads require sign-in and repository access. Run the downloaded
-MSI to upgrade the existing installation. Newer installers preserve user settings
+Run the downloaded MSI to upgrade the existing installation, including earlier
+private test versions. Newer installers preserve user settings
 and reject downgrades. Program files include the .NET runtime and complete CBB
 source, plus installer definitions and build instructions.
 
@@ -78,8 +78,8 @@ Each saved update retains the previous settings file as `settings.json.bak`.
 Windows also stores installer registration and cached installation data.
 
 Update checks contact GitHub at launch and every 24 hours while CBB runs.
-Public releases can generate a clickable Windows notification. Private releases
-must be checked manually in the browser; CBB contains no GitHub token.
+A newer release can generate a clickable Windows notification that opens its
+GitHub release page. CBB contains no GitHub token.
 The check sends no window titles or rule contents. GitHub receives ordinary
 request information, including the source IP address.
 
@@ -88,9 +88,9 @@ Uninstall through **Windows Settings → Apps → Installed apps**, select
 command or feedback dialog. Uninstalling retains settings for a future reinstall
 and removes the startup registration.
 
-## Alpha limitations
+## Beta limitations
 
-- Custom title bars may ignore the system-menu state. The alpha cannot guarantee
+- Custom title bars may ignore the system-menu state. The beta cannot guarantee
   blocking in every application; visual/click behavior needs UAT per application.
 - Elevated or protected applications may reject changes. CBB does not elevate itself.
 - The Windows Close command can also affect Alt+F4 or the system-menu Close entry.
@@ -98,15 +98,15 @@ and removes the startup registration.
   application if necessary. CBB only restores buttons it changed during its session.
 - Detection is polled approximately every 700 ms. A newly opened window may be
   closable briefly before the first scan.
-- Unsigned alpha; Windows may show an unrecognized-publisher warning.
+- Unsigned beta; Windows may show an unrecognized-publisher warning.
 - x64 Windows 11 only in this first release. ARM64 and x86 are not packaged.
 
 ## Development and contributions
 
 See [build instructions](docs/BUILD.md), [UAT checklist](docs/UAT.md), and
 [contribution guidelines](CONTRIBUTING.md). Use Issues for reports or patch ideas.
-Use Discussions for general comments when enabled. Propose code through pull requests.
-While private, these require an invitation to the repository.
+Use Discussions for general comments. Propose code through pull requests.
+GitHub sign-in is required to post comments or submit contributions.
 
 ## License
 

@@ -1,8 +1,8 @@
 param(
     [switch]$SkipTests,
-    [string]$ProductVersion = '0.8.3',
-    [string]$ProductCode = '{E5E14797-42C0-4205-A5D7-401CA5C7AA49}',
-    [string]$ReleaseName = '0.8.3'
+    [string]$ProductVersion = '0.9.0',
+    [string]$ProductCode = '{4AE39929-EF67-4BB3-97BF-F8CCE230E3A1}',
+    [string]$ReleaseName = '0.9.0beta'
 )
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot

@@ -1,4 +1,4 @@
-# 0.8.3 UAT checklist
+# 0.9.0beta UAT checklist
 
 Use a disposable document or test window first. Save work before testing closing.
 
@@ -34,9 +34,11 @@ Use a disposable document or test window first. Save work before testing closing
    on the window-list popup.
    Sign out/in or reboot when convenient. CBB should run and apply saved rules.
    Disable startup and verify it stays disabled after another sign-in.
-10. Check for updates. The private alpha should explain that browser sign-in is
-    needed, without asking you to paste a token. Public notification delivery will
-    need testing after a release is accessible through the public API.
+10. Check for updates with internet access. The current version should report
+    no newer release. An older installed version should detect 0.9.0beta and offer
+    its public GitHub release page. Check notification delivery on your desktop.
+    Downloads must work without GitHub sign-in. An offline update check should
+    report that it could not connect; window blocking must remain usable.
 11. Before a future upgrade, save several rules and enable startup. Run the newer
     MSI. Verify one Installed apps entry, retained rules, and startup preference.
     Try an older MSI and confirm the downgrade is refused.

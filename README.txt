@@ -1,15 +1,15 @@
-CBB-CloseButtonBlocker 0.8.3
+CBB-CloseButtonBlocker 0.9.0beta
 Author: BenRussoUSA
 License: GNU General Public License version 3 (GPL-3.0-only)
 
-PRIVATE ALPHA FOR USER ACCEPTANCE TESTING
+PUBLIC BETA
 
 GitHub project and README:
 https://github.com/BenRussoUSA/CBB-CloseButtonBlocker
 Releases and update announcements:
 https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases
 
-Private repository links require GitHub sign-in and repository access.
+Downloads are public and do not require GitHub sign-in.
 
 CBB runs in the Windows notification area. Click its icon to open a table
 with Hide Close Button on the left and Window Title on the right. Turn a
@@ -44,8 +44,8 @@ accidental-close aid, not a security boundary. Keyboard/system-menu Close
 can also be affected. Task Manager can still terminate applications.
 
 Update checks run at launch and every 24 hours while running. Public GitHub
-updates use a clickable Windows notification. This private alpha does not
-store GitHub credentials; check private releases in the browser manually.
+updates use a clickable Windows notification that opens the release page.
+CBB does not store GitHub credentials.
 No automatic downloads or installations occur.
 
 Uninstall through Windows Settings > Apps > Installed apps. Select
@@ -55,4 +55,4 @@ command or feedback dialog. Settings are retained for reinstalling.
 Complete application source and installer/build definitions are in src\.
 See src\docs\BUILD.md for building and src\docs\UAT.md for testing.
 Required third-party notices are in licenses\.
-This alpha is unsigned. Windows may display an unrecognized-publisher prompt.
+This beta is unsigned. Windows may display an unrecognized-publisher prompt.
