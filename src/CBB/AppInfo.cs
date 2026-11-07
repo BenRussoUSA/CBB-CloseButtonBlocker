@@ -6,7 +6,7 @@ namespace CBB;
 public static class AppInfo
 {
     public const string Name = "CBB-CloseButtonBlocker";
-    public const string Version = "0.9.0beta";
+    public const string Version = "0.9.4beta";
     public const string Repository = "https://github.com/BenRussoUSA/CBB-CloseButtonBlocker";
     public const string MutexName = "Local\\BenRussoUSA.CBB.CloseButtonBlocker";
     public const string StopEventName = "Local\\BenRussoUSA.CBB.CloseButtonBlocker.Stop";
@@ -24,7 +24,7 @@ public static class AppInfo
         return string.Equals(key?.GetValue(Name) as string, StartupCommand, StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string StartupCommand => $"\"{Environment.ProcessPath}\"";
+    private static string StartupCommand => $"\"{Application.ExecutablePath}\"";
     public static void SetStartup(bool enabled)
     {
         using var key = Registry.CurrentUser.CreateSubKey(RunKey);

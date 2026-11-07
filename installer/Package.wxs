@@ -17,6 +17,9 @@
     </Property>
     <Icon Id="CbbIcon" SourceFile="$(var.PayloadDir)\app.ico" />
     <Launch Condition="VersionNT64 AND NOT ARM64" Message="CBB requires x64 Windows." />
+    <PropertyRef Id="WIX_IS_NETFRAMEWORK_481_OR_LATER_INSTALLED" />
+    <Launch Condition="Installed OR WIX_IS_NETFRAMEWORK_481_OR_LATER_INSTALLED"
+            Message="CBB requires .NET Framework 4.8.1, included with Windows 11 version 22H2 and later. Update Windows before installing CBB. This installer does not download dependencies." />
     <SetProperty Id="ARPINSTALLLOCATION" Value="[INSTALLFOLDER]" After="CostFinalize" />
     <StandardDirectory Id="LocalAppDataFolder">
       <Directory Id="ProgramsFolder" Name="Programs">

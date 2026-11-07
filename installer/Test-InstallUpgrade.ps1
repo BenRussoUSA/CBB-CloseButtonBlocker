@@ -4,13 +4,13 @@ param([switch]$ResumeAfterUpgrade)
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path $PSScriptRoot
 Set-Location $repoRoot
-$releaseMsi = (Resolve-Path 'artifacts/release/CBB-CloseButtonBlocker-0.9.0beta-win-x64.msi').Path
+$releaseMsi = (Resolve-Path 'artifacts/release/CBB-CloseButtonBlocker-0.9.4beta-win-x64.msi').Path
 $installDir = Join-Path $env:LOCALAPPDATA 'Programs/CBB-CloseButtonBlocker'
 $settingsDir = Join-Path $env:LOCALAPPDATA 'CBB-CloseButtonBlocker'
 $settingsFile = Join-Path $settingsDir 'settings.json'
 $runKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
 $name = 'CBB-CloseButtonBlocker'
-$productCode = '{4AE39929-EF67-4BB3-97BF-F8CCE230E3A1}'
+$productCode = '{73F36BA7-B95D-4A8D-9B4E-24821687E7BA}'
 $oldCode = '{428160C4-D002-4AE3-90A5-33A173FFBE6C}'
 if (-not $ResumeAfterUpgrade) {
     if ((Test-Path $installDir) -or (Test-Path $settingsDir)) { throw 'A CBB installation or settings directory already exists. Test aborted without modifying it.' }
@@ -23,7 +23,7 @@ $buildDir = Get-ChildItem artifacts -Directory -Filter 'build-*' | Sort-Object N
 $env:DOTNET_ROOT = Join-Path $repoRoot '.tools/dotnet'
 $oldMsi = Join-Path $testDir 'CBB-upgrade-fixture-0.7.99.msi'
 if (-not $ResumeAfterUpgrade) {
-    & ./.tools/wix/wix.exe build installer/Package.wxs (Join-Path $buildDir.FullName 'Payload.wxs') -arch x64 -d "PayloadDir=$($buildDir.FullName)/payload" -d 'ProductVersion=0.7.99' -d "ProductCode=$oldCode" -o $oldMsi
+    & ./.tools/wix/wix.exe build installer/Package.wxs (Join-Path $buildDir.FullName 'Payload.wxs') -ext WixToolset.Netfx.wixext/4.0.6 -arch x64 -d "PayloadDir=$($buildDir.FullName)/payload" -d 'ProductVersion=0.7.99' -d "ProductCode=$oldCode" -o $oldMsi
     if ($LASTEXITCODE -ne 0) { throw 'Upgrade fixture packaging failed.' }
 }
 function Run-Msi([string]$action, [string]$target, [string]$label, [switch]$ExpectFailure) {
@@ -45,14 +45,14 @@ New-ItemProperty -Path $runKey -Name $name -Value "`"$installDir\$name.exe`"" -P
 $before = (Get-FileHash $settingsFile).Hash
 $running = Start-Process -FilePath (Join-Path $installDir "$name.exe") -PassThru -WindowStyle Hidden
 Start-Sleep -Seconds 2
-if ($running.HasExited) { throw 'Installed self-contained application exited unexpectedly.' }
+if ($running.HasExited) { throw 'Installed Framework application exited unexpectedly.' }
 Run-Msi '/i' $releaseMsi '02-upgrade-beta'
 if ((Get-FileHash $settingsFile).Hash -ne $before) { throw 'Upgrade changed saved settings.' }
 if (-not (Get-ItemProperty -Path $runKey -Name $name -ErrorAction SilentlyContinue)) { throw 'Upgrade lost startup setting.' }
 if (-not $running.WaitForExit(5000)) { throw 'Upgrade did not stop the running application.' }
 }
 $entries = @(foreach ($registryRoot in @('HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall','HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall')) { Get-ChildItem $registryRoot -ErrorAction SilentlyContinue | Get-ItemProperty | Where-Object DisplayName -eq $name })
-if ($entries.Count -ne 1 -or $entries[0].DisplayVersion -ne '0.9.0') { throw 'Upgrade registration is incorrect.' }
+if ($entries.Count -ne 1 -or $entries[0].DisplayVersion -ne '0.9.4') { throw 'Upgrade registration is incorrect.' }
 Run-Msi '/i' $oldMsi '03-reject-downgrade' -ExpectFailure
 $downgradeLog = Get-Content (Join-Path $testDir '03-reject-downgrade.log') -Raw
 if ($downgradeLog -notmatch 'A newer version of CBB-CloseButtonBlocker is already installed') { throw 'Downgrade failed for an unexpected reason.' }
@@ -72,4 +72,4 @@ foreach ($file in @($settingsFile, ($settingsFile + '.bak'))) {
 if (@(Get-ChildItem -LiteralPath $settingsDir -Force).Count -eq 0) { Remove-Item -LiteralPath $settingsDir }
 Run-Msi '/i' $releaseMsi '05-install-final-beta'
 Write-Output 'PASS: install, running-app shutdown, settings/startup preservation, downgrade rejection, uninstall, and final clean install.'
-Write-Output 'CBB 0.9.0 is installed for the current user; launch from Start for UAT.'
+Write-Output 'CBB 0.9.4 is installed for the current user; launch from Start for UAT.'

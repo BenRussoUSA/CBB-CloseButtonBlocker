@@ -1,115 +1,160 @@
 # CBB-CloseButtonBlocker
 
-## Prevent accidental window closing
+An accidental click on the X can close a window you wanted to keep open. CBB
+helps prevent that by letting you block the Close button on the windows you
+choose. It runs in the Windows notification area, with a small tray icon that
+opens your window list whenever you need it.
 
-CBB is a small Windows 11 tray utility that lets you turn off the Close button
-on selected windows. You can also save window-title rules so matching windows
-are automatically protected when they open.
+You can start with a single window. If you find yourself protecting the same
+applications regularly, save a rule and CBB will apply it when matching windows
+first appear.
 
-Created by **BenRussoUSA** · **0.9.0beta** · Windows 11 x64 · GPLv3
+CBB is a free, open-source project by [BenRussoUSA](https://github.com/BenRussoUSA).
+Version 0.9.4beta focuses on a smaller installation and less background work.
 
-### [Download Installer (.MSI)](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases/download/v0.9.0beta/CBB-CloseButtonBlocker-0.9.0beta-win-x64.msi)
+## Download and install
 
-About **38 MiB**. Includes the .NET runtime and complete CBB source. Copy it to a
-USB drive to install offline; no additional dependency downloads are required.
-The installed application files occupy about **118 MiB**, plus Windows' installer cache.
+### [Download the Windows installer (.MSI)](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases/download/v0.9.4beta/CBB-CloseButtonBlocker-0.9.4beta-win-x64.msi)
 
-| Link | What you will find |
+The installer is about 148 KiB, including the complete CBB source. Download the
+MSI and run it to install CBB or upgrade an existing copy. Your saved rules and
+startup preference are kept during an upgrade.
+
+You can also copy the MSI to a USB drive and install without internet access.
+On Windows 11 x64 version 22H2 or later, CBB uses the .NET Framework 4.8.1
+libraries already included with Windows. There is no separate runtime to
+download. The installer checks this for you before continuing.
+
+If you are using the original Windows 11 release, update Windows first: that
+version included Framework 4.8. See [Microsoft's Windows and Framework version
+table](https://learn.microsoft.com/en-us/dotnet/framework/get-started/system-requirements)
+for the details.
+
+| Link | What it contains |
 | --- | --- |
-| [Download Installer](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases/download/v0.9.0beta/CBB-CloseButtonBlocker-0.9.0beta-win-x64.msi) | Recommended Windows x64 MSI |
-| [README](#use) | Setup and usage instructions below |
-| [LICENSE](LICENSE.txt) | GNU General Public License version 3 |
-| [CONTRIBUTING](CONTRIBUTING.md) | How to suggest changes or submit patches |
-| [Release notes and other downloads](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases/tag/v0.9.0beta) | ZIP distribution and checksums |
-| [Report a problem](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/issues) | Bug reports and feedback |
-| [Discuss the project](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/discussions) | General comments and questions |
+| [Download Installer](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases/download/v0.9.4beta/CBB-CloseButtonBlocker-0.9.4beta-win-x64.msi) | The Windows x64 MSI |
+| [README](#using-cbb) | Instructions for using CBB |
+| [Release notes](docs/RELEASE-0.9.4beta.md) | Changes and resource measurements for 0.9.4 |
+| [Other downloads](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases) | Release announcements, ZIP packages and SHA-256 checksums |
+| [LICENSE](LICENSE.txt) | The GNU General Public License, version 3 |
+| [CONTRIBUTING](CONTRIBUTING.md) | How to report a problem or propose a change |
 
-**Public beta:** downloads are available without GitHub sign-in.
-The installer is unsigned and may trigger a Windows publisher warning.
-Test with the applications you use before relying on Close-button blocking.
+You do not need a GitHub account to download CBB. This beta is unsigned, so
+Windows may display an unknown-publisher warning. After installation, open
+CBB-CloseButtonBlocker from the Start menu. If you do not see its tray icon,
+check the notification area's hidden-icons menu.
 
-### Get started
+## Using CBB
 
-1. Download and run the MSI, then launch **CBB-CloseButtonBlocker** from Start.
-2. Click the tray icon to open the window table.
-3. Turn on **Hide Close Button** beside a window to block its Close command.
-   Turn the toggle off to restore normal closing.
+Left-click the tray icon to see your open windows. In the Block Close Button
+column, turn a window's toggle On to disable its standard Windows Close command.
+Turn it Off to restore normal closing. You can click the toggle or select it
+with the keyboard and press Space. An N/A toggle means that the window does not
+provide a standard Close command that CBB can control.
 
-CBB works through the standard Windows Close command. Applications with custom
-title bars may behave differently. It is not a security or parental-control tool.
+The Close button may remain visible while blocked. It is best to try CBB with
+an empty document first, because some applications use their own title bars or
+handle closing differently. The [compatibility notes](docs/COMPATIBILITY.md)
+explain what has been checked and where your testing can help.
 
-## Use
+Use Search to find a window by part of its title. Select Show blocked windows
+only to reduce the list to windows whose standard Close command is disabled.
+Right-click a window to create an automatic blocking rule based on its title.
+The rule editor shows matching open windows before you save.
 
-Install the x64 MSI and launch **CBB-CloseButtonBlocker** from the Start menu.
-Left-click the tray icon (possibly under hidden icons) to open a table with
-**Hide Close Button** on the left and **Window Title** on the right.
-Click a toggle or focus it and press Space. **On** disables the Windows Close
-command; **Off** allows normal closing. The heading describes the protection
-setting: CBB disables the Close command and does not physically hide the button.
-**N/A** means no standard Close command was found; that toggle cannot be changed.
-The author link at the bottom right opens the GitHub profile.
+Right-click the tray icon to open Settings or check for updates. The same menu
+contains About CBB-CloseButtonBlocker and Exit CBB. Exiting restores the Close
+states that CBB changed during that session.
 
-Right-click the tray icon and choose **Settings** to add exact titles or regex
-rules. You can edit or remove rules.
-**Help** includes examples, and the rule editor can test a sample title.
-Exact titles are case-sensitive; regex supports `(?i)` for case-insensitive matching.
+## Automatic blocking and startup
 
-Rules apply when a window is first detected, including existing windows at
-CBB startup. Saving rules checks open windows that have no manual override.
-A manual selection remains in effect until that window closes or CBB exits,
-even if the title changes. Newly opened matching windows are blocked again.
-Removing a rule does not unblock an existing window; turn its toggle off.
+If you want CBB to be available whenever you sign into Windows, enable Launch
+at startup at the top of Settings. It is off until you choose to enable it.
 
-Startup is opt-in and is controlled at the top of Settings. The tray icon's
-right-click menu also provides **About CBB-CloseButtonBlocker** and
-**Check for updates**. **Exit CBB** restores the Close states CBB changed.
+Below that option, you can add exact window titles or regular expressions.
+You can edit or remove a rule at any time. If regular expressions are new to
+you, the Help button includes examples, and you can test a sample title in the
+editor before saving anything.
 
-## Installation and updates
+An exact title must match the whole window title, including capitalization.
+For example, `Report - Notepad` matches that title only. A regular expression
+such as `.* - Notepad$` matches titles ending in ` - Notepad`. Add `(?i)` at the
+start of a regular expression to ignore capitalization.
 
-Download the MSI from [Releases](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases).
-Run the downloaded MSI to upgrade the existing installation, including earlier
-private test versions. Newer installers preserve user settings
-and reject downgrades. Program files include the .NET runtime and complete CBB
-source, plus installer definitions and build instructions.
+Rules apply when CBB first detects a window, including windows already open at
+startup. Saving rules also checks existing windows that have no manual override.
+If you later turn a window's toggle Off, that choice lasts until the window
+closes or CBB exits, even if its title changes. A newly opened matching window
+is protected again. Removing a rule does not unblock a window already protected;
+turn that window's toggle Off when you want to restore its Close command.
 
-Program folder: `%LOCALAPPDATA%\Programs\CBB-CloseButtonBlocker`.
-Settings: `%LOCALAPPDATA%\CBB-CloseButtonBlocker\settings.json`.
-Each saved update retains the previous settings file as `settings.json.bak`.
-Windows also stores installer registration and cached installation data.
+CBB keeps your rules across reboots and upgrades. There is room for up to 100
+rules, with up to 2,048 characters per pattern. If a regular expression takes
+longer than its 50 ms matching limit, CBB pauses that rule and displays a
+notification. You can edit the pattern to simplify it, or restart CBB to try
+it again. This prevents a slow pattern from repeatedly consuming CPU.
 
-Update checks contact GitHub at launch and every 24 hours while CBB runs.
-A newer release can generate a clickable Windows notification that opens its
-GitHub release page. CBB contains no GitHub token.
-The check sends no window titles or rule contents. GitHub receives ordinary
-request information, including the source IP address.
+## Smaller installation and less background work
 
-Uninstall through **Windows Settings → Apps → Installed apps**, select
-**CBB-CloseButtonBlocker**, and choose **Uninstall**. CBB has no in-app uninstall
-command or feedback dialog. Uninstalling retains settings for a future reinstall
-and removes the startup registration.
+Version 0.9.4 uses the .NET Framework and Windows Forms libraries supplied with
+Windows 11. Earlier packages carried their own modern .NET runtime; this one
+contains the application and its complete source, without that runtime copy.
+The [resource measurements](docs/PERFORMANCE.md) compare the distribution size
+and installed files with 0.9.0beta. They also explain the memory and CPU samples.
 
-## Beta limitations
+CBB now listens for Windows events instead of scanning every 700 ms. It combines
+bursts of notifications before updating affected windows, and it updates the
+visible table when information changes. It still takes an initial snapshot at
+startup and refreshes when you open the table or save rules. Event delivery is
+asynchronous, so blocking a newly opened window is not instantaneous.
 
-- Custom title bars may ignore the system-menu state. The beta cannot guarantee
-  blocking in every application; visual/click behavior needs UAT per application.
-- Elevated or protected applications may reject changes. CBB does not elevate itself.
-- The Windows Close command can also affect Alt+F4 or the system-menu Close entry.
-- Forced termination or a crash can leave buttons disabled. Restart the affected
-  application if necessary. CBB only restores buttons it changed during its session.
-- Detection is polled approximately every 700 ms. A newly opened window may be
-  closable briefly before the first scan.
-- Unsigned beta; Windows may show an unrecognized-publisher warning.
-- x64 Windows 11 only in this first release. ARM64 and x86 are not packaged.
+## Updates and uninstalling
 
-## Development and contributions
+CBB checks GitHub at launch and every 24 hours while running. If a newer release
+is available, a Windows notification opens that release's download page. You
+choose when to download and run the new MSI. The installer replaces the previous
+version while preserving saved rules and the startup preference. Launch CBB from
+Start after the upgrade. Older installers are prevented from replacing a newer
+installed version.
 
-See [build instructions](docs/BUILD.md), [UAT checklist](docs/UAT.md), and
-[contribution guidelines](CONTRIBUTING.md). Use Issues for reports or patch ideas.
-Use Discussions for general comments. Propose code through pull requests.
-GitHub sign-in is required to post comments or submit contributions.
+Application files are kept in
+`%LOCALAPPDATA%\Programs\CBB-CloseButtonBlocker`. Settings are stored separately
+in `%LOCALAPPDATA%\CBB-CloseButtonBlocker\settings.json`, so upgrades do not replace
+them. Saving settings keeps the previous file as `settings.json.bak`. Windows
+also maintains installer registration and a cached copy of installation data.
 
-## License
+To uninstall, open Windows Settings, then Apps, then Installed apps. Find
+CBB-CloseButtonBlocker and choose Uninstall. This removes startup registration
+but retains your rules for a future reinstall.
 
-Copyright (C) 2026 BenRussoUSA. CBB code is licensed under GPL version 3 only;
-see [LICENSE.txt](LICENSE.txt). Third-party code retains its own license.
-GPLv3 allows commercial redistribution; corresponding-source obligations apply.
+## Privacy and limitations
+
+Window titles and rules stay on your computer. Update checks send no window
+titles or rule contents, and CBB stores no GitHub credentials. GitHub receives
+normal connection information, including your IP address, when an update check
+runs or you open a GitHub link. CBB remains usable without internet access.
+
+CBB is intended to help with accidental closing. A program's own Exit command
+or Task Manager can still close it. Blocking the standard Close command can also
+affect Alt+F4 and the system-menu Close entry. Applications running as
+administrator may reject changes because CBB runs with ordinary user permissions.
+
+A crash or forced termination can leave a Close button disabled. If necessary,
+restart the affected application. This beta packages x64 only; it does not
+include an ARM64 or x86 installer.
+
+## Contributing and licensing
+
+Found a problem or have an idea? You can open an
+[issue](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/issues), or join
+[Discussions](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/discussions)
+for general questions and feedback. You do not need to write code to contribute;
+reports about how CBB works with your applications are useful too.
+
+If you would like to suggest a code change, submit a pull request. The
+[build instructions](docs/BUILD.md) and [UAT checklist](docs/UAT.md) explain how
+to build and test CBB. GitHub requires an account to post or contribute.
+
+Copyright (C) 2026 BenRussoUSA. CBB is licensed under GPL-3.0-only. The license
+allows commercial redistribution and requires corresponding source under its
+terms. See [LICENSE.txt](LICENSE.txt) for the full license.

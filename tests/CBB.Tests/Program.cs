@@ -18,7 +18,7 @@ internal static class Program
     [STAThread]
     private static int Main(string[] args)
     {
-        ApplicationConfiguration.Initialize();
+        Application.EnableVisualStyles(); Application.SetCompatibleTextRenderingDefault(false);
         if (args.Contains("--fixture")) { Fixture(); return 0; }
         var output = args.Length > 0 ? Path.GetFullPath(args[0]) : Path.Combine(Path.GetTempPath(), "CBB-tests-" + Guid.NewGuid());
         Directory.CreateDirectory(output);
@@ -40,6 +40,11 @@ internal static class Program
         Check(new WindowRule("[", true).Validate() != null, "invalid regex rejected");
         Check(new WindowRule(" ").Validate() != null, "empty rule rejected");
         Check(!new WindowRule("(a+)+$", true).Matches(new string('a', 10000) + "!"), "pathological regex times out safely");
+        var expensive = new WindowRule("(a+)+$", true);
+        expensive.Matches(new string('a', 10000) + "!");
+        var elapsed = Stopwatch.StartNew();
+        for (int i = 0; i < 100; i++) expensive.Matches(new string('a', 10000) + "!");
+        Check(expensive.TimedOut && elapsed.ElapsedMilliseconds < 50, "timed-out regex is quarantined instead of repeatedly consuming CPU");
     }
 
     private static void Persistence(string output)
@@ -58,6 +63,17 @@ internal static class Program
         File.WriteAllText(file, "{\"SchemaVersion\":999}");
         var future = new SettingsStore(file); future.Load();
         Check(future.LoadWarning != null, "future schema is not silently loaded");
+        File.WriteAllText(file, "{\"SchemaVersion\":1,\"LaunchAtStartup\":true,\"Rules\":[{\"Pattern\":\"(?i)notes$\",\"IsRegex\":true}]}");
+        var legacy = new SettingsStore(file);
+        var migrated = legacy.Load();
+        Check(legacy.LoadWarning == null && migrated.LaunchAtStartup && migrated.Rules.Single().Matches("NOTES"), "0.9.0 JSON loads with the Framework serializer");
+        File.WriteAllText(file, new string(' ', SettingsStore.MaxBytes + 1));
+        var oversized = new SettingsStore(file); oversized.Load();
+        Check(oversized.LoadWarning != null && new FileInfo(file).Length > SettingsStore.MaxBytes, "oversized settings rejected without altering the file");
+        File.WriteAllText(file, "{\"SchemaVersion\":1,\"Rules\":[" + string.Join(",", Enumerable.Repeat("{\"Pattern\":\"example\"}", SettingsStore.MaxRules + 1)) + "]}");
+        var tooMany = new SettingsStore(file); tooMany.Load();
+        Check(tooMany.LoadWarning != null, "excessive rule count rejected on load");
+        Check(new WindowRule(new string('x', 2049)).Validate() != null, "excessive pattern length rejected");
     }
 
     private static void Versions()
@@ -70,6 +86,16 @@ internal static class Program
         Check(!Updates.IsNewer("bad", "0.8.0alpha"), "invalid release tag ignored");
         Check(Updates.IsNewer("v0.9.0beta", "0.8.3"), "public beta is newer than the private test release");
         Check(!Updates.IsNewer("v0.9.0beta", "0.9.0beta"), "current public beta does not update to itself");
+        Check(Updates.IsNewer("v0.9.4beta", "0.9.0beta"), "0.9.4beta upgrades 0.9.0beta");
+        Check(!Updates.IsNewer(new string('9', 10000), AppInfo.Version), "oversized release tag ignored");
+        (string Message, string? Url) Response(string json)
+        {
+            using var data = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(json));
+            return Updates.ReadResponse(data);
+        }
+        Check(Response("[{\"tag_name\":\"v1.0.0\",\"html_url\":\"https://example.com/update\",\"draft\":false}]").Url == null, "update links outside the project are rejected");
+        Check(Response("[{\"tag_name\":\"v1.0.0\",\"html_url\":\"" + AppInfo.Repository + "/releases/tag/v1.0.0\",\"draft\":false}]").Url != null, "public project release link accepted");
+        Check(Response("[{\"tag_name\":\"v1.0.0\",\"html_url\":\"" + AppInfo.Repository + "/releases/tag/v1.0.0\",\"draft\":true}]").Url == null, "draft releases are ignored");
     }
 
     private static void Pump() { for (int i = 0; i < 12; i++) { Application.DoEvents(); Thread.Sleep(20); } }
@@ -91,15 +117,23 @@ internal static class Program
             var window = controller.Windows.Single(w => w.Handle == handle);
             Check((NativeWindows.CloseState(handle) & 3) != 0, "existing matching window blocked on first scan");
             Check(controller.Change(window, true) == null && (NativeWindows.CloseState(handle) & 3) == 0, "manual ON restores close");
-            controller.Scan(rules);
-            Check((NativeWindows.CloseState(handle) & 3) == 0, "polling respects manual override");
+            int scans = controller.FullScanCount;
+            Pump(); Pump(); Pump(); Pump();
+            Check(controller.FullScanCount == scans, "idle message pumping does not trigger recurring full scans");
+            Check((NativeWindows.CloseState(handle) & 3) == 0, "event handling respects manual override");
             child.StandardInput.WriteLine("rename"); child.StandardInput.Flush(); child.StandardOutput.ReadLine(); Pump();
+            Check(controller.Windows.Single(w => w.Handle == handle).Title == "Renamed fixture" && controller.FullScanCount == scans, "title notification updates the list without a scan");
             controller.Scan(rules, true);
             Check((NativeWindows.CloseState(handle) & 3) == 0, "title change and rule save preserve manual override");
+            child.StandardInput.WriteLine("hide"); child.StandardInput.Flush(); child.StandardOutput.ReadLine(); Pump();
+            Check(controller.Windows.All(w => w.Handle != handle), "hide notification removes a window from the visible list");
+            child.StandardInput.WriteLine("show"); child.StandardInput.Flush(); child.StandardOutput.ReadLine(); Pump();
+            Check(controller.Windows.Any(w => w.Handle == handle) && (NativeWindows.CloseState(handle) & 3) == 0, "show notification retains the window's manual override");
             child.StandardInput.WriteLine("replace"); child.StandardInput.Flush();
-            handle = (nint)long.Parse(child.StandardOutput.ReadLine()!); Pump(); controller.Scan(rules);
+            scans = controller.FullScanCount;
+            handle = (nint)long.Parse(child.StandardOutput.ReadLine()!); Pump();
             window = controller.Windows.Single(w => w.Handle == handle);
-            Check((NativeWindows.CloseState(handle) & 3) != 0, "new matching window blocked after old instance closes");
+            Check((NativeWindows.CloseState(handle) & 3) != 0 && controller.FullScanCount == scans, "create/destroy notifications block a replacement window without scanning");
             Check(controller.Change(window, true) == null, "replacement window can be unblocked");
             Check(controller.Change(window, false) == null, "manual OFF disables close");
             controller.RestoreAll();
@@ -137,6 +171,25 @@ internal static class Program
                 controller.Scan(rules); menu.RefreshWindows();
                 Check((NativeWindows.CloseState(handle) & 3) == 0,
                     "grid manual override survives automatic rule scan");
+                var filters = menu.Controls.OfType<TableLayoutPanel>().Single().Controls.OfType<FlowLayoutPanel>().Single();
+                var search = filters.Controls.OfType<TextBox>().Single();
+                search.Text = "CBB UAT Fixture"; Pump();
+                Check(grid.Rows.Count == 1 && ReferenceEquals(grid.Rows[0], row), "search retains the existing matching grid row");
+                var blockedOnly = filters.Controls.OfType<CheckBox>().Single();
+                blockedOnly.Checked = true; Pump();
+                Check(grid.Rows.Count == 0, "blocked-only filter excludes an unblocked window");
+                controller.Change(window, false); menu.RefreshWindows(); Pump();
+                Check(grid.Rows.Count == 1, "blocked-only filter includes a newly blocked window");
+                grid.CurrentCell = grid.Rows[0].Cells[0];
+                grid.Rows[0].Cells[0].AccessibilityObject.DoDefaultAction(); Pump();
+                Check(grid.Rows.Count == 0 && (NativeWindows.CloseState(handle) & 3) == 0, "turning protection off safely removes a row from the blocked-only view");
+                using (var editor = new RuleEditor(new WindowRule(window.Title), () => new[] { window }))
+                {
+                    editor.Show(menu); Pump();
+                    var matches = editor.Controls.OfType<TableLayoutPanel>().Single().Controls.OfType<ListBox>().Single();
+                    Check(matches.Items.Count == 1 && Equals(matches.Items[0], window.Title), "rule editor previews the selected window title before saving");
+                    editor.Close();
+                }
                 menu.Close();
             }
             controller.RestoreAll();
@@ -157,13 +210,15 @@ internal static class Program
         {
             while (Console.ReadLine() is string command)
             {
-                anchor.BeginInvoke(() =>
+                anchor.BeginInvoke((Action)(() =>
                 {
                     if (command == "exit") { window.Close(); Application.ExitThread(); return; }
                     if (command == "rename") { window.Text = "Renamed fixture"; Console.WriteLine("renamed"); }
+                    if (command == "hide") { window.Hide(); Console.WriteLine("hidden"); }
+                    if (command == "show") { window.Show(); ShowWindow(window.Handle, 4); Console.WriteLine("shown"); }
                     if (command == "replace") { window.Dispose(); window = NewWindow(); window.Show(); ShowWindow(window.Handle, 4); Console.WriteLine(window.Handle.ToInt64()); }
                     Console.Out.Flush();
-                });
+                }));
             }
         });
         Application.Run(); anchor.Dispose(); window.Dispose();
@@ -188,8 +243,8 @@ internal static class Program
         NativeWindows.SetCloseState(offWindow.Handle, 3);
         using var previewController = new WindowController();
         previewController.Windows.AddRange([
-            new(onWindow.Handle, (uint)Environment.ProcessId, onWindow.Text),
-            new(offWindow.Handle, (uint)Environment.ProcessId, offWindow.Text),
+            new(onWindow.Handle, (uint)Process.GetCurrentProcess().Id, onWindow.Text),
+            new(offWindow.Handle, (uint)Process.GetCurrentProcess().Id, offWindow.Text),
             new(0, 0, "Unsupported window - no standard Close command")
         ]);
         using (var preview = new WindowMenu(previewController))

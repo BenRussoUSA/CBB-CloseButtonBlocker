@@ -1,11 +1,11 @@
-# 0.9.0beta UAT checklist
+# 0.9.4beta UAT checklist
 
 Use a disposable document or test window first. Save work before testing closing.
 
 1. Install the MSI as your normal user. Verify one CBB entry in Installed apps
-   and a Start-menu shortcut. Launch it. No separate .NET installation is needed.
+   and a Start-menu shortcut. Launch it. On Windows 11 22H2 or later, the included Framework 4.8.1 is sufficient.
 2. Find the black tray icon with a light-gray X and red prohibition sign.
-   Left-click it and confirm a grid appears with a narrow "Hide Close Button"
+   Left-click it and confirm a grid appears with a narrow "Block Close Button"
    column on the left and a wide "Window Title" column on the right.
    Check the author link at the bottom right.
    Settings and Uninstall must not appear in this window.
@@ -22,7 +22,7 @@ Use a disposable document or test window first. Save work before testing closing
    Edit it, then remove it. Removing a rule does not change an already blocked window.
 6. Add regex `(?i).*notepad.*`. Use Help and the sample-title test. Try an invalid
    pattern `[` and confirm Save refuses it. Confirm settings survive closing CBB.
-7. With a matching window, turn the toggle Off manually. Wait several scans and
+7. With a matching window, turn the toggle Off manually. Wait for window notifications and
    change the title by editing a disposable document. It must remain Off. Close
    and reopen the application; the new matching window's toggle must be On.
 8. Right-click the tray icon. Verify Settings appears first, with About and Check
@@ -35,7 +35,7 @@ Use a disposable document or test window first. Save work before testing closing
    Sign out/in or reboot when convenient. CBB should run and apply saved rules.
    Disable startup and verify it stays disabled after another sign-in.
 10. Check for updates with internet access. The current version should report
-    no newer release. An older installed version should detect 0.9.0beta and offer
+    no newer release. An older installed version should detect 0.9.4beta and offer
     its public GitHub release page. Check notification delivery on your desktop.
     Downloads must work without GitHub sign-in. An offline update check should
     report that it could not connect; window blocking must remain usable.
@@ -51,3 +51,12 @@ result of X click, result of Alt+F4, restoration on Exit CBB, and any error text
 
 Not yet a universal guarantee: native-menu state tests cannot prove that every
 application's custom X button honors Windows' disabled Close state.
+
+13. Search for part of a title, then enable Show blocked windows only. Turn a
+    filtered window Off and confirm its row disappears. Right-click a title to
+    create a rule, verify the match preview, and save it.
+14. Try 100%, 150%, and 200% display scaling. Check the window table and settings
+    dialogs, including when moving them between monitors with different scales.
+15. Upgrade from 0.9.0beta and confirm its bundled runtime DLLs are removed from
+    the program folder. Test installation from a USB drive while disconnected
+    from the network. CBB should run using Windows' Framework libraries.

@@ -5,7 +5,8 @@ internal static class Program
     [STAThread]
     private static void Main(string[] args)
     {
-        ApplicationConfiguration.Initialize();
+        Application.EnableVisualStyles();
+        Application.SetCompatibleTextRenderingDefault(false);
         if (args.Contains("--prepare-uninstall"))
         {
             StopRunningInstance();

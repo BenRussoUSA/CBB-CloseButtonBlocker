@@ -1,0 +1,14 @@
+﻿version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: nuget
+    directory: /src/CBB
+    schedule:
+      interval: weekly
+  - package-ecosystem: nuget
+    directory: /tests/CBB.Tests
+    schedule:
+      interval: weekly

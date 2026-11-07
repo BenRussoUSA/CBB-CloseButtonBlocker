@@ -6,8 +6,9 @@ public sealed class SettingsForm : Form
     private readonly CheckBox startup = new() { Text = "Launch at startup (when I sign into Windows)", AutoSize = true };
     public AppSettings? Result { get; private set; }
 
-    public SettingsForm(AppSettings settings)
+    public SettingsForm(AppSettings settings, Func<IEnumerable<WindowEntry>>? openWindows = null)
     {
+        Font = new Font("Segoe UI", 9); AutoScaleMode = AutoScaleMode.Dpi;
         Text = "CBB Settings"; ClientSize = new Size(650, 420); MinimumSize = new Size(550, 380);
         StartPosition = FormStartPosition.CenterParent; ShowInTaskbar = false;
         var layout = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(16), ColumnCount = 1, RowCount = 5 };
@@ -32,7 +33,9 @@ public sealed class SettingsForm : Form
         void EditRule(bool adding)
         {
             if (!adding && rules.SelectedIndex < 0) return;
-            using var editor = new RuleEditor(adding ? null : (WindowRule)rules.SelectedItem!);
+            if (adding && rules.Items.Count >= SettingsStore.MaxRules)
+            { MessageBox.Show(this, $"You can save up to {SettingsStore.MaxRules} rules. Remove an entry first.", "Rule limit"); return; }
+            using var editor = new RuleEditor(adding ? null : (WindowRule)rules.SelectedItem!, openWindows);
             if (editor.ShowDialog(this) != DialogResult.OK || editor.Rule == null) return;
             if (adding) rules.Items.Add(editor.Rule); else rules.Items[rules.SelectedIndex] = editor.Rule;
         }

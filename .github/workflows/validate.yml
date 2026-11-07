@@ -1,0 +1,67 @@
+﻿name: Build and security checks
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 11 * * 1'
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          global-json-file: global.json
+      - name: Scan repository history for credentials
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force .tools/gitleaks | Out-Null
+          $archive = '.tools/gitleaks/gitleaks.zip'
+          Invoke-WebRequest 'https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_windows_x64.zip' -OutFile $archive
+          if ((Get-FileHash $archive).Hash -ne 'd29144deff3a68aa93ced33dddf84b7fdc26070add4aa0f4513094c8332afc4e') { throw 'Gitleaks checksum mismatch.' }
+          Expand-Archive $archive .tools/gitleaks
+          & .tools/gitleaks/gitleaks.exe git . --log-opts=--all --redact=100 --no-banner --no-color
+          if ($LASTEXITCODE -ne 0) { throw 'Secret scan failed.' }
+      - name: Prepare installer tools
+        shell: pwsh
+        run: |
+          dotnet tool install wix --version 4.0.6 --tool-path .tools/wix
+          if ($LASTEXITCODE -ne 0) { throw 'WiX installation failed.' }
+          & .tools/wix/wix.exe extension add WixToolset.Netfx.wixext/4.0.6
+          if ($LASTEXITCODE -ne 0) { throw 'WiX extension installation failed.' }
+      - name: Build and test
+        shell: pwsh
+        run: ./build.ps1
+      - name: Audit build dependencies and release payload
+        shell: pwsh
+        run: |
+          $env:DOTNET_CLI_HOME = Join-Path $PWD '.tools/cli-home'
+          $env:NUGET_PACKAGES = Join-Path $PWD '.tools/packages'
+          dotnet list src/CBB/CBB.csproj package --vulnerable --include-transitive --format json > artifacts/dependency-audit.json
+          if ($LASTEXITCODE -ne 0) { throw 'Dependency audit failed.' }
+          $report = Get-Content artifacts/dependency-audit.json -Raw | ConvertFrom-Json
+          foreach ($project in $report.projects) {
+            foreach ($framework in $project.frameworks) {
+              foreach ($package in @($framework.topLevelPackages) + @($framework.transitivePackages)) {
+                if ($package.vulnerabilities.Count -gt 0) { throw 'A dependency has a reported vulnerability.' }
+              }
+            }
+          }
+          $build = Get-ChildItem artifacts -Directory -Filter 'build-*' | Sort-Object Name -Descending | Select-Object -First 1
+          & .tools/gitleaks/gitleaks.exe dir (Join-Path $build.FullName 'payload') --redact=100 --no-banner --no-color
+          if ($LASTEXITCODE -ne 0) { throw 'Release payload secret scan failed.' }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: CBB-validation
+          path: |
+            artifacts/release/*0.9.4beta*
+            artifacts/release/SHA256SUMS.txt
+            artifacts/test-results.txt
+            artifacts/dependency-audit.json
+          retention-days: 14

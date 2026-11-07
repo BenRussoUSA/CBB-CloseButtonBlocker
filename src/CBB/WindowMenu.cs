@@ -14,27 +14,37 @@ public sealed class WindowMenu : Form
         ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single,
         ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing,
         SelectionMode = DataGridViewSelectionMode.FullRowSelect, EditMode = DataGridViewEditMode.EditOnEnter,
-        AccessibleName = "Open windows", AccessibleDescription = "Turn Hide Close Button on to block closing a window."
+        AccessibleName = "Open windows", AccessibleDescription = "Turn Block Close Button on to block closing a window."
     };
     private readonly Label status = new() { AutoSize = true, Dock = DockStyle.Fill, Padding = new Padding(0, 6, 0, 6) };
     private WindowEntry[] entries = [];
+    private WindowEntry[] previousWindows = [];
+    private WindowEntry[] sortedWindows = [];
+    private readonly TextBox search = new() { Width = 240, AccessibleName = "Search window titles" };
+    private readonly CheckBox blockedOnly = new() { Text = "Show blocked windows only", AutoSize = true };
     private bool refreshing;
 
-    public WindowMenu(WindowController controller)
+    public WindowMenu(WindowController controller, Action<WindowEntry>? createRule = null)
     {
         this.controller = controller;
+        Font = new Font("Segoe UI", 9); AutoScaleMode = AutoScaleMode.Dpi;
         Text = $"{AppInfo.Name} · {AppInfo.Version}"; ShowInTaskbar = false;
         ClientSize = new Size(700, 530); MinimumSize = new Size(540, 430); MaximizeBox = false;
         StartPosition = FormStartPosition.Manual;
         var area = Screen.FromPoint(Cursor.Position).WorkingArea;
         Location = new Point(Math.Max(area.Left, area.Right - Width - 12), Math.Max(area.Top, area.Bottom - Height - 12));
-        var layout = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(14), ColumnCount = 1, RowCount = 4 };
-        layout.RowStyles.Add(new(SizeType.AutoSize)); layout.RowStyles.Add(new(SizeType.Percent, 100));
+        var layout = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(14), ColumnCount = 1, RowCount = 5 };
+        layout.RowStyles.Add(new(SizeType.AutoSize)); layout.RowStyles.Add(new(SizeType.AutoSize)); layout.RowStyles.Add(new(SizeType.Percent, 100));
         layout.RowStyles.Add(new(SizeType.AutoSize)); layout.RowStyles.Add(new(SizeType.AutoSize));
         layout.Controls.Add(new Label { Text = "List of windows", AutoSize = true, Padding = new Padding(0, 0, 0, 10) });
+        var filters = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, Margin = new Padding(0, 0, 0, 8) };
+        filters.Controls.Add(new Label { Text = "Search", AutoSize = true, Margin = new Padding(0, 5, 8, 0) });
+        filters.Controls.Add(search); filters.Controls.Add(blockedOnly); layout.Controls.Add(filters);
+        search.TextChanged += (_, _) => RefreshWindows();
+        blockedOnly.CheckedChanged += (_, _) => RefreshWindows();
         windows.Columns.Add(new DataGridViewColumn(new CloseToggleCell())
         {
-            Name = "HideCloseButton", HeaderText = "Hide Close Button", SortMode = DataGridViewColumnSortMode.NotSortable,
+            Name = "BlockCloseButton", HeaderText = "Block Close Button", SortMode = DataGridViewColumnSortMode.NotSortable,
             Resizable = DataGridViewTriState.False
         });
         windows.Columns.Add(new DataGridViewTextBoxColumn
@@ -66,10 +76,20 @@ public sealed class WindowMenu : Form
             if (row.Tag is not WindowEntry window || row.Cells[0].ReadOnly) return;
             bool blocked = row.Cells[0].Value is true;
             var error = controller.Change(window, closeOn: !blocked);
-            RefreshWindows();
+            BeginInvoke((Action)(() => { if (!IsDisposed) RefreshWindows(); }));
             if (error != null) MessageBox.Show(this, error, "CBB could not change this window");
         };
         windows.SelectionChanged += (_, _) => { if (!refreshing) ShowStatus(); };
+        var rowMenu = new ContextMenuStrip();
+        var ruleAction = rowMenu.Items.Add("Create automatic blocking rule");
+        ruleAction.Click += (_, _) => { if (windows.CurrentRow?.Tag is WindowEntry selected) createRule?.Invoke(selected); };
+        rowMenu.Opening += (_, e) => e.Cancel = createRule == null || windows.CurrentRow == null;
+        windows.ContextMenuStrip = rowMenu;
+        windows.CellMouseDown += (_, e) =>
+        {
+            if (e.Button == MouseButtons.Right && e.RowIndex >= 0) windows.CurrentCell = windows.Rows[e.RowIndex].Cells[1];
+        };
+        FormClosed += (_, _) => rowMenu.Dispose();
         windows.FontChanged += (_, _) => ResizeRows();
         DpiChanged += (_, _) => ResizeRows();
         ResizeRows();
@@ -81,7 +101,7 @@ public sealed class WindowMenu : Form
 
     private void ResizeRows()
     {
-        windows.Columns[0].Width = Math.Max(ScalePixels(145), TextRenderer.MeasureText("Hide Close Button", windows.Font).Width + ScalePixels(24));
+        windows.Columns[0].Width = Math.Max(ScalePixels(145), TextRenderer.MeasureText("Block Close Button", windows.Font).Width + ScalePixels(24));
         windows.Columns[1].MinimumWidth = ScalePixels(180);
         windows.ColumnHeadersHeight = Math.Max(ScalePixels(34), windows.Font.Height + ScalePixels(16));
         windows.RowTemplate.Height = Math.Max(ScalePixels(38), windows.Font.Height + ScalePixels(18));
@@ -91,8 +111,14 @@ public sealed class WindowMenu : Form
 
     public void RefreshWindows()
     {
-        if (IsDisposed) return;
-        var nextEntries = controller.Windows.OrderBy(w => w.Title, StringComparer.CurrentCultureIgnoreCase).ToArray();
+        if (IsDisposed || refreshing) return;
+        if (!controller.Windows.SequenceEqual(previousWindows))
+        {
+            previousWindows = controller.Windows.ToArray();
+            sortedWindows = previousWindows.OrderBy(w => w.Title, StringComparer.CurrentCultureIgnoreCase).ThenBy(w => (long)w.Handle).ToArray();
+        }
+        var nextEntries = sortedWindows.Where(w => w.Title.IndexOf(search.Text, StringComparison.CurrentCultureIgnoreCase) >= 0 &&
+            (!blockedOnly.Checked || IsBlocked(w))).ToArray();
         refreshing = true;
         try
         {
@@ -101,12 +127,18 @@ public sealed class WindowMenu : Form
                 var selected = (windows.CurrentRow?.Tag as WindowEntry)?.Handle;
                 int column = windows.CurrentCell?.ColumnIndex ?? 0;
                 int top = windows.FirstDisplayedScrollingRowIndex;
-                windows.Rows.Clear();
                 entries = nextEntries;
-                foreach (var window in entries)
+                var handles = new HashSet<nint>(entries.Select(w => w.Handle));
+                for (int i = windows.Rows.Count - 1; i >= 0; i--)
+                    if (!handles.Contains(((WindowEntry)windows.Rows[i].Tag).Handle)) windows.Rows.RemoveAt(i);
+                for (int i = 0; i < entries.Length; i++)
                 {
-                    int index = windows.Rows.Add(false, window.Title);
-                    windows.Rows[index].Tag = window;
+                    var window = entries[i];
+                    var row = windows.Rows.Cast<DataGridViewRow>().FirstOrDefault(r => ((WindowEntry)r.Tag).Handle == window.Handle);
+                    if (row == null) { windows.Rows.Insert(i, IsBlocked(window), window.Title); row = windows.Rows[i]; }
+                    else if (row.Index != i) { windows.Rows.Remove(row); windows.Rows.Insert(i, row); }
+                    row.Tag = window;
+                    if (!Equals(row.Cells[1].Value, window.Title)) row.Cells[1].Value = window.Title;
                 }
                 int selectedIndex = Array.FindIndex(entries, w => w.Handle == selected);
                 if (selectedIndex >= 0) windows.CurrentCell = windows.Rows[selectedIndex].Cells[column];
@@ -120,7 +152,13 @@ public sealed class WindowMenu : Form
                 bool blocked = supported && (state & 3) != 0;
                 var cell = row.Cells[0];
                 cell.ReadOnly = !supported;
-                if (!Equals(cell.Value, blocked)) cell.Value = blocked;
+                if (!Equals(cell.Value, blocked))
+                {
+                    bool editing = windows.CurrentCell == cell && windows.IsCurrentCellInEditMode;
+                    if (editing) { windows.CancelEdit(); windows.EndEdit(); }
+                    cell.Value = blocked;
+                    if (editing) windows.BeginEdit(false);
+                }
                 cell.ToolTipText = !supported ? "Unavailable: this window has no standard Windows Close command." :
                     blocked ? "On: Close is blocked. Click or press Space to restore it." :
                     "Off: normal closing is allowed. Click or press Space to block it.";
@@ -128,15 +166,20 @@ public sealed class WindowMenu : Form
             }
         }
         finally { refreshing = false; }
-        windows.InvalidateColumn(0);
         ShowStatus();
+    }
+
+    private static bool IsBlocked(WindowEntry window)
+    {
+        uint state = NativeWindows.CloseState(window.Handle);
+        return state != NativeWindows.MissingMenuItem && (state & 3) != 0;
     }
 
     private void ShowStatus()
     {
         if (windows.CurrentRow?.Tag is not WindowEntry window)
         {
-            status.Text = entries.Length == 0 ? "No eligible windows are currently open." : "Turn a toggle on to block that window's Close button.";
+            status.Text = entries.Length == 0 ? "No windows match this view." : "Turn a toggle on to block that window's Close button.";
             return;
         }
         if (controller.Errors.TryGetValue(window.Handle, out var error)) { status.Text = error; return; }
