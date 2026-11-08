@@ -120,6 +120,8 @@ internal static class Program
         var start = new ProcessStartInfo(Path.Combine(AppContext.BaseDirectory, "CBB.Tests.exe"), "--fixture")
         { RedirectStandardInput = true, RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden };
         using var child = Process.Start(start)!;
+        // The pipe protocol must not inherit a console code page or emit a BOM.
+        using var commands = new StreamWriter(child.StandardInput.BaseStream, new System.Text.UTF8Encoding(false)) { AutoFlush = true };
         try
         {
             nint handle = (nint)long.Parse(ReadFixtureReply(child));
@@ -136,15 +138,15 @@ internal static class Program
             Pump(); Pump(); Pump(); Pump();
             Check(controller.FullScanCount == scans, "idle message pumping does not trigger recurring full scans");
             Check((NativeWindows.CloseState(handle) & 3) == 0, "event handling respects manual override");
-            child.StandardInput.WriteLine("rename"); child.StandardInput.Flush(); ReadFixtureReply(child); Pump();
+            commands.WriteLine("rename"); ReadFixtureReply(child); Pump();
             Check(controller.Windows.Single(w => w.Handle == handle).Title == "Renamed fixture" && controller.FullScanCount == scans, "title notification updates the list without a scan");
             controller.Scan(rules, true);
             Check((NativeWindows.CloseState(handle) & 3) == 0, "title change and rule save preserve manual override");
-            child.StandardInput.WriteLine("hide"); child.StandardInput.Flush(); ReadFixtureReply(child); Pump();
+            commands.WriteLine("hide"); ReadFixtureReply(child); Pump();
             Check(controller.Windows.All(w => w.Handle != handle), "hide notification removes a window from the visible list");
-            child.StandardInput.WriteLine("show"); child.StandardInput.Flush(); ReadFixtureReply(child); Pump();
+            commands.WriteLine("show"); ReadFixtureReply(child); Pump();
             Check(controller.Windows.Any(w => w.Handle == handle) && (NativeWindows.CloseState(handle) & 3) == 0, "show notification retains the window's manual override");
-            child.StandardInput.WriteLine("replace"); child.StandardInput.Flush();
+            commands.WriteLine("replace");
             scans = controller.FullScanCount;
             handle = (nint)long.Parse(ReadFixtureReply(child)); Pump();
             window = controller.Windows.Single(w => w.Handle == handle);
@@ -211,19 +213,20 @@ internal static class Program
         }
         finally
         {
-            if (!child.HasExited) { child.StandardInput.WriteLine("exit"); child.StandardInput.Flush(); if (!child.WaitForExit(3000)) child.Kill(); }
+            if (!child.HasExited) { commands.WriteLine("exit"); if (!child.WaitForExit(3000)) child.Kill(); }
         }
     }
 
     private static void Fixture()
     {
+        using var commands = new StreamReader(Console.OpenStandardInput(), new System.Text.UTF8Encoding(false), true);
         Form NewWindow() => new() { Text = "CBB UAT Fixture", ShowInTaskbar = true, StartPosition = FormStartPosition.Manual, Location = new Point(-20000, -20000), Size = new Size(300, 200) };
         var window = NewWindow();
         var anchor = new Control(); anchor.CreateControl();
         window.Show(); ShowWindow(window.Handle, 4); Console.WriteLine(window.Handle.ToInt64()); Console.Out.Flush();
         _ = Task.Run(() =>
         {
-            while (Console.ReadLine() is string command)
+            while (commands.ReadLine() is string command)
             {
                 anchor.BeginInvoke((Action)(() =>
                 {
