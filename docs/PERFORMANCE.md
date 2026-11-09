@@ -8,7 +8,7 @@ management. They are observations from this test, not minimum requirements.
 
 | Measure | 0.9.0beta | 0.9.4beta |
 | --- | ---: | ---: |
-| MSI | 39,904,144 bytes (38.06 MiB) | About 148 KiB |
+| MSI | 39,904,144 bytes (38.06 MiB) | About 152 KiB |
 | ZIP | 49,999,725 bytes (47.68 MiB) | About 120 KiB |
 | Application folder, including source | 123,372,937 bytes (117.66 MiB) | About 300 KiB |
 | Bundled .NET runtime | Included | None |

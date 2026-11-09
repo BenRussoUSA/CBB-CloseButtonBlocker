@@ -9,7 +9,7 @@ You can keep using the tray icon and your saved rules as before.
 
 ## A much smaller download
 
-The MSI is about 148 KiB, down from 38.06 MiB in 0.9.0beta. That is a reduction
+The MSI is about 152 KiB, down from 38.06 MiB in 0.9.0beta. That is a reduction
 of more than 99%, with the complete CBB source still included. Installed files
 occupy about 300 KiB instead of 117.66 MiB. Windows keeps its own installer cache,
 and your settings remain in their separate folder.
