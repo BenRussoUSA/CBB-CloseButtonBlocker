@@ -100,14 +100,31 @@ internal static class Program
 
     private static void Pump() { for (int i = 0; i < 12; i++) { Application.DoEvents(); Thread.Sleep(20); } }
 
+    private static string ReadFixtureReply(Process child)
+    {
+        // Keep this STA responsive while the other process changes a window.
+        // Accessibility/event delivery can require messages to be processed here.
+        var reply = child.StandardOutput.ReadLineAsync();
+        var deadline = Stopwatch.StartNew();
+        while (!reply.IsCompleted && deadline.Elapsed < TimeSpan.FromSeconds(10))
+        {
+            Application.DoEvents();
+            Thread.Sleep(10);
+        }
+        if (!reply.IsCompleted) throw new TimeoutException("The fixture did not reply within 10 seconds.");
+        return reply.GetAwaiter().GetResult() ?? throw new IOException("The fixture closed its output unexpectedly.");
+    }
+
     private static void Lifecycle()
     {
         var start = new ProcessStartInfo(Path.Combine(AppContext.BaseDirectory, "CBB.Tests.exe"), "--fixture")
         { RedirectStandardInput = true, RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden };
         using var child = Process.Start(start)!;
+        // The pipe protocol must not inherit a console code page or emit a BOM.
+        using var commands = new StreamWriter(child.StandardInput.BaseStream, new System.Text.UTF8Encoding(false)) { AutoFlush = true };
         try
         {
-            nint handle = (nint)long.Parse(child.StandardOutput.ReadLine()!);
+            nint handle = (nint)long.Parse(ReadFixtureReply(child));
             Pump();
             Console.WriteLine($"Fixture: hwnd={handle}, visible={NativeWindows.IsWindowVisible(handle)}, owner={NativeWindows.GetWindow(handle, 4)}, child={child.Id}");
             using var controller = new WindowController();
@@ -121,17 +138,17 @@ internal static class Program
             Pump(); Pump(); Pump(); Pump();
             Check(controller.FullScanCount == scans, "idle message pumping does not trigger recurring full scans");
             Check((NativeWindows.CloseState(handle) & 3) == 0, "event handling respects manual override");
-            child.StandardInput.WriteLine("rename"); child.StandardInput.Flush(); child.StandardOutput.ReadLine(); Pump();
+            commands.WriteLine("rename"); ReadFixtureReply(child); Pump();
             Check(controller.Windows.Single(w => w.Handle == handle).Title == "Renamed fixture" && controller.FullScanCount == scans, "title notification updates the list without a scan");
             controller.Scan(rules, true);
             Check((NativeWindows.CloseState(handle) & 3) == 0, "title change and rule save preserve manual override");
-            child.StandardInput.WriteLine("hide"); child.StandardInput.Flush(); child.StandardOutput.ReadLine(); Pump();
+            commands.WriteLine("hide"); ReadFixtureReply(child); Pump();
             Check(controller.Windows.All(w => w.Handle != handle), "hide notification removes a window from the visible list");
-            child.StandardInput.WriteLine("show"); child.StandardInput.Flush(); child.StandardOutput.ReadLine(); Pump();
+            commands.WriteLine("show"); ReadFixtureReply(child); Pump();
             Check(controller.Windows.Any(w => w.Handle == handle) && (NativeWindows.CloseState(handle) & 3) == 0, "show notification retains the window's manual override");
-            child.StandardInput.WriteLine("replace"); child.StandardInput.Flush();
+            commands.WriteLine("replace");
             scans = controller.FullScanCount;
-            handle = (nint)long.Parse(child.StandardOutput.ReadLine()!); Pump();
+            handle = (nint)long.Parse(ReadFixtureReply(child)); Pump();
             window = controller.Windows.Single(w => w.Handle == handle);
             Check((NativeWindows.CloseState(handle) & 3) != 0 && controller.FullScanCount == scans, "create/destroy notifications block a replacement window without scanning");
             Check(controller.Change(window, true) == null, "replacement window can be unblocked");
@@ -196,19 +213,20 @@ internal static class Program
         }
         finally
         {
-            if (!child.HasExited) { child.StandardInput.WriteLine("exit"); child.StandardInput.Flush(); if (!child.WaitForExit(3000)) child.Kill(); }
+            if (!child.HasExited) { commands.WriteLine("exit"); if (!child.WaitForExit(3000)) child.Kill(); }
         }
     }
 
     private static void Fixture()
     {
+        using var commands = new StreamReader(Console.OpenStandardInput(), new System.Text.UTF8Encoding(false), true);
         Form NewWindow() => new() { Text = "CBB UAT Fixture", ShowInTaskbar = true, StartPosition = FormStartPosition.Manual, Location = new Point(-20000, -20000), Size = new Size(300, 200) };
         var window = NewWindow();
         var anchor = new Control(); anchor.CreateControl();
         window.Show(); ShowWindow(window.Handle, 4); Console.WriteLine(window.Handle.ToInt64()); Console.Out.Flush();
         _ = Task.Run(() =>
         {
-            while (Console.ReadLine() is string command)
+            while (commands.ReadLine() is string command)
             {
                 anchor.BeginInvoke((Action)(() =>
                 {

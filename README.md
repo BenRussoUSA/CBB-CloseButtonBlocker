@@ -16,7 +16,7 @@ Version 0.9.4beta focuses on a smaller installation and less background work.
 
 ### [Download the Windows installer (.MSI)](https://github.com/BenRussoUSA/CBB-CloseButtonBlocker/releases/download/v0.9.4beta/CBB-CloseButtonBlocker-0.9.4beta-win-x64.msi)
 
-The installer is about 148 KiB, including the complete CBB source. Download the
+The installer is about 152 KiB, including the complete CBB source. Download the
 MSI and run it to install CBB or upgrade an existing copy. Your saved rules and
 startup preference are kept during an upgrade.
 
